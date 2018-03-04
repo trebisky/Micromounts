@@ -1,0 +1,48 @@
+#!/usr/bin/ruby
+
+# Tom Trebisky 3-4-2018
+#   db_sq3
+
+# This is sort of a test pilot as I ponder how to
+#  migrate my old micromount database out of rails.
+# It is tempting to continue to use activerecord
+#  outside of rails, but I have seen plenty of API
+#  changes with activerecord.
+# Biting the bullet and kissing activerecord goodbye
+#  will probably yield great stability benefits.
+# I will roll my own class that embeds any necessary SQL.
+
+$:.unshift "."
+require 'Mounts'
+
+$db = "minerals.sqlite3"
+
+mdb = Mounts.new
+
+print "Running sqlite version #{mdb.db_version}\n"
+puts mdb.fetch_total_count.to_s + " mounts in database"
+puts ""
+
+#puts mdb.show_pragma
+
+m = mdb.fetch 2
+m.show
+
+who = "wulfenite"
+num = mdb.fetch_species_count who
+print "#{num} specimens of #{who} in database\n"
+
+
+who = "galena"
+num = mdb.fetch_species_count who
+print "#{num} specimens of #{who} in database\n"
+
+ms = mdb.fetch_species who
+ms.each { |m|
+    m.show
+}
+
+puts ""
+puts " -- All done"
+
+# THE END
