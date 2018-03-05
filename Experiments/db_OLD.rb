@@ -14,10 +14,13 @@
 
 require 'sqlite3'
 
-#$db = "minerals.sqlite3"
+$db = "minerals.sqlite3"
 
 # This is one mount
 class Mount
+#    attr_accessor :myid
+#    attr_accessor :species
+#    attr_accessor "location"
 
     def Mount.setup ( index, name, type )
 	stmt = "def #{name}; @data[#{index}]; end\n"
@@ -28,23 +31,12 @@ class Mount
 
     def initialize ( db_row )
 	@data = db_row
-    end
-
-    def mk_line
-	sp = species.sub /^\s*/, ""
-	as = associations.sub /^\s*/, ""
-	if ( as != "" )
-	    sp += ", " + as
-	end
-	rv = "TT-#{myid}".ljust 11
-	rv += " "
-	rv += sp.ljust 40
-	rv += " #{location}\n"
-	rv
+#	@myid = @data[1]
+#	@species = @data[2]
+#	@location = @data[4]
     end
     def show
-#	print "TT-#{myid} #{species}  #{location}\n"
-	print mk_line
+	print "TT-#{myid} #{species}  #{location}\n"
     end
 end
 
@@ -173,5 +165,77 @@ class Mounts
 	return $db.last_insert_row_id
     end
 end
+
+mdb = Mounts.new
+
+print "Running sqlite version #{mdb.db_version}\n"
+puts mdb.fetch_total_count.to_s + " mounts in database"
+puts ""
+
+#puts mdb.show_pragma
+
+m = mdb.fetch 2
+m.show
+
+who = "wulfenite"
+num = mdb.fetch_species_count who
+print "#{num} specimens of #{who} in database\n"
+
+
+who = "galena"
+num = mdb.fetch_species_count who
+print "#{num} specimens of #{who} in database\n"
+
+ms = mdb.fetch_species who
+ms.each { |m|
+    m.show
+}
+
+# mdb.show_first
+# mdb.show_class
+
+#puts mdb.get_last_row
+
+# Dumping the original schema yields this:
+# (there are 13 items)
+# sqlite3 returns all of these as ruby Strings
+# except for the first which is an Integer
+#
+# CREATE TABLE IF NOT EXISTS "mounts" (
+#  "id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+#  "myid" varchar(255),
+#  "species" varchar(255),
+#  "associations" varchar(255),
+#  "location" varchar(255),
+#  "notes" text,
+#  "origin" varchar(255),
+#  "source" varchar(255),
+#  "owner" varchar(255),
+#  "status" varchar(255),
+#  "label_info" varchar(255),
+#  "created_at" datetime,
+#  "updated_at" datetime
+# );
+
+#count = Mount.count
+#print "#{count} mounts in database\n"
+#puts ""
+#
+#def show_mount ( num )
+#    m = Mount.find(1)
+#    print "ID = #{m.myid}\n"
+#    print "SP = #{m.species}\n"
+#    print "AS = #{m.associations}\n"
+#    print "LO = #{m.location}\n"
+#    print "OW = #{m.owner}\n"
+#    print "ST = #{m.status}\n"
+#    print "OR = #{m.origin}\n"
+#end
+#
+##puts Mount.find(1)
+#show_mount 1
+
+puts ""
+puts " -- All done"
 
 # THE END

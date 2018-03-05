@@ -17,30 +17,32 @@ require 'Mounts'
 
 $db = "minerals.sqlite3"
 
-mdb = Mounts.new
+$mdb = Mounts.new
 
-print "Running sqlite version #{mdb.db_version}\n"
-puts mdb.fetch_total_count.to_s + " mounts in database"
+print "Running sqlite version #{$mdb.db_version}\n"
+puts $mdb.fetch_total_count.to_s + " mounts in database"
 puts ""
 
-#puts mdb.show_pragma
+#puts $mdb.show_pragma
 
-m = mdb.fetch 2
+m = $mdb.fetch 2
 m.show
+puts ""
 
-who = "wulfenite"
-num = mdb.fetch_species_count who
-print "#{num} specimens of #{who} in database\n"
+def show_all ( who )
+    num = $mdb.fetch_species_count who
+    print "#{num} specimens of #{who} in database\n"
 
+    ms = $mdb.fetch_species who
+    ms.each { |m|
+	m.show
+    }
+end
 
-who = "galena"
-num = mdb.fetch_species_count who
-print "#{num} specimens of #{who} in database\n"
+show_all "galena"
+puts ""
+show_all "wulfenite"
 
-ms = mdb.fetch_species who
-ms.each { |m|
-    m.show
-}
 
 puts ""
 puts " -- All done"

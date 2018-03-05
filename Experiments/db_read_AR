@@ -1,0 +1,47 @@
+#!/usr/bin/ruby
+
+# Tom Trebisky 3-1-2018
+#   db_read
+
+# We could do this with just sqlite3, but using
+# activerecord would let us port existing code more
+# easily (maybe).  If activerecord does the usual rails
+# thing and changes interfaces endlessly, we can do the
+# port to plain sqlite3.
+#require 'sqlite3'
+
+#require 'rubygems'
+require 'active_record'
+
+$db = "minerals.sqlite3"
+
+ActiveRecord::Base.establish_connection(
+    :adapter => "sqlite3",
+#    host => "localhost",
+    :database => $db
+)
+
+class Mount < ActiveRecord::Base
+end
+
+count = Mount.count
+print "#{count} mounts in database\n"
+puts ""
+
+def show_mount ( num )
+    m = Mount.find(1)
+    print "ID = #{m.myid}\n"
+    print "SP = #{m.species}\n"
+    print "AS = #{m.associations}\n"
+    print "LO = #{m.location}\n"
+    print "OW = #{m.owner}\n"
+    print "ST = #{m.status}\n"
+    print "OR = #{m.origin}\n"
+end
+
+#puts Mount.find(1)
+show_mount 1
+
+puts " -- All done"
+
+# THE END
