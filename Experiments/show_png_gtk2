@@ -1,0 +1,58 @@
+#!/usr/bin/ruby
+
+# Tom Trebisky 3-1-2018
+# dnf install rubygem-gtk2
+
+# Proof of concept to display a PNG image and
+# then switch images as needed.
+
+require 'gtk2'
+
+$png1 = "label_17-3.png"
+$png2 = "label_17-4.png"
+
+# gtk2 requires this call
+Gtk::init()
+win = Gtk::Window.new()
+
+win.set_title( "Mineral Database" )
+win.border_width = 5
+
+win.signal_connect( 'delete_event' ) { false }
+win.signal_connect( 'destroy' ) { Gtk.main_quit }
+
+mainbox  = Gtk::VBox.new( false, 0 )
+win.add mainbox
+
+setbut = Gtk::Button.new( ' Fire missles ' )
+mainbox.pack_start setbut, false, true, 0
+
+$image = Gtk::Image.new $png1
+$which_png = 1
+
+mainbox.add $image
+
+def swap_image
+    if $which_png == 1
+	pix = GdkPixbuf::Pixbuf.new( :file => $png2 )
+	$image.set_pixbuf pix
+	$which_png = 2
+    else
+	pix = GdkPixbuf::Pixbuf.new( :file => $png1 )
+	$image.set_pixbuf pix
+	$which_png = 1
+    end
+end
+
+setbut.signal_connect( 'clicked' ) {
+    puts "You clicked !!"
+    swap_image
+}
+
+win.show_all
+
+Gtk.main
+
+puts "All done !!"
+
+# THE END

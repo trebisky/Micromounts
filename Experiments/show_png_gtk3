@@ -1,0 +1,74 @@
+#!/usr/bin/ruby
+
+# Tom Trebisky 3-1-2018
+# dnf install rubygem-gtk3
+
+# We wrote this first as a proof of concept using gtk2,
+#  now let's see how hard it is to port it to gtk3.
+# Not very hard it turns out.
+# Gtk3 very nicely gives deprecation messages that guide
+#  all the necessary changes -- no groping around with
+#  google searches when things break.
+# Comments below show the messages and my changes.
+
+require 'gtk3'
+
+$png1 = "label_17-3.png"
+$png2 = "label_17-4.png"
+
+# gtk2 requires this call
+Gtk::init()
+win = Gtk::Window.new()
+
+win.set_title( "Mineral Database" )
+win.border_width = 5
+
+win.signal_connect( 'delete_event' ) { false }
+win.signal_connect( 'destroy' ) { Gtk.main_quit }
+
+#  'Gtk::VBox.new' has been deprecated. Use 'Gtk::Box.new(:vertical, spacing)'
+# mainbox  = Gtk::VBox.new( false, 0 )
+mainbox  = Gtk::Box.new( :vertical, 0 )
+win.add mainbox
+
+# 'Gtk::Button#initialize(label_or_stock_id, use_underline = nil)' style has been deprecated.
+#  Use 'Gtk::Button#initialize(:label => nil, :use_underline => nil, :stock_id => nil)'
+# setbut = Gtk::Button.new( ' Fire missles ' )
+setbut = Gtk::Button.new( :label => ' Fire missles ' )
+# 'Gtk::Box#pack_start(child, expand = true, fill = true, padding = 0)' style has been deprecated.
+#  Use 'Gtk::Box#pack_start(child, :expand => true, :fill => true, :padding => 0)' style.
+# mainbox.pack_start setbut, false, true, 0
+mainbox.pack_start( setbut, :expand => false )
+
+# 'Gtk::Image#initialize(image, size = nil)' style has been deprecated.
+#  Use 'Gtk::Image#initialize(:stock => nil, :icon_name => nil, :icon_set => nil, :icon => nil, :file => nil, :pixbuf => nil, :animation => nil, :surface => nil, :size => nil)' style.
+# $image = Gtk::Image.new $png1
+$image = Gtk::Image.new( :file => $png1 )
+$which_png = 1
+
+mainbox.add $image
+
+def swap_image
+    if $which_png == 1
+	pix = GdkPixbuf::Pixbuf.new( :file => $png2 )
+	$image.set_pixbuf pix
+	$which_png = 2
+    else
+	pix = GdkPixbuf::Pixbuf.new( :file => $png1 )
+	$image.set_pixbuf pix
+	$which_png = 1
+    end
+end
+
+setbut.signal_connect( 'clicked' ) {
+    puts "You clicked !!"
+    swap_image
+}
+
+win.show_all
+
+Gtk.main
+
+puts "All done !!"
+
+# THE END

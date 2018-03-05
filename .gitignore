@@ -1,10 +1,10 @@
 db_read
 db_sq3_ver1
-label_17-3.png
-label_17-4.png
+*.png
 Makefile
 methods
 minerals.sqlite3
 rails
 rails/*
-show_png
+box*
+zzz
