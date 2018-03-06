@@ -19,6 +19,8 @@ require 'sqlite3'
 # This is one mount
 class Mount
 
+    # at this point, ignoring type.
+    # everything saved as a string.
     def Mount.setup ( index, name, type )
 	stmt = "def #{name}; @data[#{index}]; end\n"
 	self.class_eval stmt
@@ -67,7 +69,7 @@ class Mount
     end
     def show
 #	print "TT-#{myid} #{species}  #{location}\n"
-	print mk_line
+	print mk_line + "\n"
     end
 end
 
@@ -182,7 +184,7 @@ class Mounts
     # Fetch a batch of rows given a starting id
     def fetch_all ( id )
 	cmd = "SELECT * FROM Mounts LIMIT #{@limit} OFFSET #{id-1}"
-	puts cmd
+	# puts cmd
 	stm = $db.prepare cmd
 	rs = stm.execute
 
