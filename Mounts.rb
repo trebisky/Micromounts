@@ -30,16 +30,39 @@ class Mount
 	@data = db_row
     end
 
-    def mk_line
+    def mk_id ( njust=10 )
+	"TT-#{myid}".ljust njust
+    end
+
+    def mk_desc ( nfill=nil )
 	sp = species.sub /^\s*/, ""
+	sp = species.sub /\s*$/, ""
+#	puts sp
 	as = associations.sub /^\s*/, ""
+	as = associations.sub /\s*$/, ""
+#	puts as
+	loc = location.sub /^\s*/, ""
+	loc = location.sub /\s*$/, ""
+#	puts loc
+#	exit
 	if ( as != "" )
 	    sp += ", " + as
 	end
-	rv = "TT-#{myid}".ljust 11
+
+	rv = sp.ljust 40
+	if nfill
+	    rv += " #{loc}".ljust nfill
+	    rv += "_"
+	else
+	    rv += " #{loc}"
+	end
+	rv
+    end
+
+    def mk_line
+	rv = mk_id 11
 	rv += " "
-	rv += sp.ljust 40
-	rv += " #{location}\n"
+	rv += mk_desc
 	rv
     end
     def show
@@ -55,8 +78,14 @@ class Mounts
 #	$db = SQLite3::Database.new( $db )
 	$db = SQLite3::Database.open( $db )
 #	$db.results_as_hash = true
+	@limit = 25
+
 	setup_mount
     end
+    def set_limit ( n )
+	@limit = n
+    end
+
     def db_version
 	return $db.get_first_value 'SELECT SQLITE_VERSION()'
     end
@@ -143,9 +172,25 @@ class Mounts
 	    puts x.class
 	}
     end
+
+    # Fetch a single record given the id
     def fetch ( id )
 	row = $db.get_first_row "SELECT * FROM Mounts WHERE Id=#{id}"
 	return Mount.new row
+    end
+
+    # Fetch a batch of rows given a starting id
+    def fetch_all ( id )
+	cmd = "SELECT * FROM Mounts LIMIT #{@limit} OFFSET #{id-1}"
+	puts cmd
+	stm = $db.prepare cmd
+	rs = stm.execute
+
+	rv = Array.new
+	rs.each { |row|
+	    rv << Mount.new( row )
+	}
+	rv
     end
     def fetch_species ( species )
 	stm = $db.prepare "SELECT * FROM Mounts WHERE species like '%#{species}%'"
