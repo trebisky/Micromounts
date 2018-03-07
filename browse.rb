@@ -104,11 +104,8 @@ class Search
 	if ( who_loc != "" )
 	    puts "Searching for location: #{who_loc}"
 	end
-	if ass
-	    num = $mdb.fetch_species_ass_count who
-	else
-	    num = $mdb.fetch_species_count who
-	end
+
+	num = $mdb.fetch_u_count who, who_loc, ass
 	#print "#{num} specimens of #{who} in database\n"
 
 	if num < 1
@@ -125,11 +122,7 @@ class Search
 	    color_white = Gdk::RGBA::new 1.0, 1.0, 1.0, 1.0
 	    @status.override_background_color :normal, color_white
 	    @status.override_color :normal, color_black
-	    if ass
-		@search = $mdb.fetch_species_ass who
-	    else
-		@search = $mdb.fetch_species who
-	    end
+	    @search = $mdb.fetch_u who, who_loc, ass
 	    $nav.show_mounts 1
 	    #@dialog.destroy
 	end
