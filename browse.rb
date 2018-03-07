@@ -43,8 +43,26 @@ class Search
 	#  I am not sure this is really necessary
 	# @dialog.signal_connect('response') { @dialog.destroy }
 
+	sp_box = Gtk::Box.new(:horizontal, 5)
+	l = Gtk::Label.new "Species: "
+	sp_box.pack_start( l, :expand => false, :fill => false)
+
 	@e_species = Gtk::Entry.new
-	@dialog.child.add @e_species
+	sp_box.pack_start( @e_species, :expand => false, :fill => true)
+
+	@dialog.child.add sp_box
+
+	@ass = Gtk::CheckButton.new "With associations: "
+	@dialog.child.add @ass
+
+	loc_box = Gtk::Box.new(:horizontal, 5)
+	l = Gtk::Label.new "Location: "
+	loc_box.pack_start( l, :expand => false, :fill => false)
+
+	@e_location = Gtk::Entry.new
+	loc_box.pack_start( @e_location, :expand => false, :fill => true)
+
+	@dialog.child.add loc_box
 
 	b = Gtk::Button.new( :label => "Search" )
 	b.signal_connect( "clicked" ) { run_search }
@@ -71,10 +89,28 @@ class Search
     end
 
     def run_search
+	ass = @ass.active?
+	if ( ass )
+	    puts "Associations active"
+	else
+	    puts "Associations NOT active"
+	end
+
+	# an empty entry widget yields an empty string
 	who = @e_species.text
-	#puts "Searching for #{who}"
-	num = $mdb.fetch_species_count who
+	who_loc = @e_location.text
+
+	puts "Searching for species: #{who}"
+	if ( who_loc != "" )
+	    puts "Searching for location: #{who_loc}"
+	end
+	if ass
+	    num = $mdb.fetch_species_ass_count who
+	else
+	    num = $mdb.fetch_species_count who
+	end
 	#print "#{num} specimens of #{who} in database\n"
+
 	if num < 1
 	    @status.text = "Sorry"
 	    color_red  = Gdk::RGBA::new 1.0, 0.0, 0.0, 1.0
@@ -89,7 +125,11 @@ class Search
 	    color_white = Gdk::RGBA::new 1.0, 1.0, 1.0, 1.0
 	    @status.override_background_color :normal, color_white
 	    @status.override_color :normal, color_black
-	    @search = $mdb.fetch_species who
+	    if ass
+		@search = $mdb.fetch_species_ass who
+	    else
+		@search = $mdb.fetch_species who
+	    end
 	    $nav.show_mounts 1
 	    #@dialog.destroy
 	end
