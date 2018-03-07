@@ -25,10 +25,84 @@ $lab_size = 100
 $mdb = Mounts.new
 $mdb.set_limit $nrows
 
+class Search
+    @dialog = nil
+    @parent = nil
+
+    def initialize ( main )
+	@search = nil
+	@parent = main
+    end
+
+    def show_dialog
+	# gtk3 says: 'Gtk::Dialog#initialize(title, parent, flags, *buttons)' style has been deprecated.
+	# Use 'Gtk::Dialog#initialize(:title => nil, :parent => nil, :flags => 0, :buttons => nil)' style.
+	@dialog = Gtk::Dialog.new( :title => "Search", :parent => @parent, :flags => :destroy_with_parent )
+
+	# Ensure that the dialog box is destroyed when the user responds.
+	#  I am not sure this is really necessary
+	# @dialog.signal_connect('response') { @dialog.destroy }
+
+	@e_species = Gtk::Entry.new
+	@dialog.child.add @e_species
+
+	b = Gtk::Button.new( :label => "Search" )
+	b.signal_connect( "clicked" ) { run_search }
+	@dialog.child.add b
+
+	b = Gtk::Button.new( :label => "Clear" )
+	b.signal_connect( "clicked" ) { clear_search }
+	@dialog.child.add b
+
+	b = Gtk::Button.new( :label => "Done" )
+	b.signal_connect( "clicked" ) { @dialog.destroy }
+	@dialog.child.add b
+
+	@status = Gtk::Label.new("")
+	@dialog.child.add @status
+
+	@dialog.show_all
+    end
+
+    def clear_search
+	@search = nil
+	$nav.show_mounts_end
+	@status.text = ""
+    end
+
+    def run_search
+	who = @e_species.text
+	#puts "Searching for #{who}"
+	num = $mdb.fetch_species_count who
+	#print "#{num} specimens of #{who} in database\n"
+	if num < 1
+	    @status.text = "Sorry"
+	    color_red  = Gdk::RGBA::new 1.0, 0.0, 0.0, 1.0
+	    color_yellow = Gdk::RGBA::new 1.0, 1.0, 0.0, 1.0
+	    @status.override_background_color :normal, color_yellow
+	    @status.override_color :normal, color_red
+	    @search = nil
+	    $nav.show_mounts_end
+	else
+	    @status.text = "#{num} found"
+	    color_black  = Gdk::RGBA::new 0.0, 0.0, 0.0, 1.0
+	    color_white = Gdk::RGBA::new 1.0, 1.0, 1.0, 1.0
+	    @status.override_background_color :normal, color_white
+	    @status.override_color :normal, color_black
+	    @search = $mdb.fetch_species who
+	    $nav.show_mounts 1
+	    #@dialog.destroy
+	end
+    end
+    def get_search
+	return @search
+    end
+end
+
 Gtk::init()
 
 # Look! in gtk3 you can set the title in the new statement
-win = Gtk::Window.new( "Micromount browser" )
+$main_win = Gtk::Window.new( "Micromount browser" )
 
 ##  def add_mount_hbox ( vbox, m )
 ##      hbox = Gtk::Box.new(:horizontal, 5)
@@ -155,10 +229,14 @@ class Nav
     end
 
     def initialize
+
 	@cur = nil
 
 	# This holds navigation and info
 	@box = Gtk::Box.new(:horizontal, 5)
+
+	b = nav_button @box, "Search   "
+	b.signal_connect( "clicked" ) { $search.show_dialog }
 
 	b = nav_button @box, "First"
 	#b.signal_connect( "clicked" ) { |_widget|
@@ -171,7 +249,7 @@ class Nav
 	b.signal_connect( "clicked" ) { show_mounts @cur + 25 }
 
 	b = nav_button @box, "Last"
-	b.signal_connect( "clicked" ) { show_mounts $mdb.fetch_total_count }
+	b.signal_connect( "clicked" ) { show_mounts_end }
 
 
 	$info = Gtk::Label.new "Insert Coin"
@@ -182,42 +260,75 @@ class Nav
 	return @box
     end
 
+    # This includes logic as to whether we are displaying
+    # a full view of the database or the results of a search.
+    # XXX - it might be cleaner to move this into the
+    # Search object
     def show_mounts ( start )
-	total = $mdb.fetch_total_count
+
+	db_total = $mdb.fetch_total_count
+	ms_search = $search.get_search
+	if ms_search
+	    total = ms_search.size
+	else
+	    total = db_total
+	end
+
 	start = (start-1) - (start -1) % $nrows + 1
 	return if ( start < 1 )
 	return if ( start > total )
 	@cur = start
-	ms = $mdb.fetch_all start
+
+	if ms_search
+	    ms = ms_search[start-1,$nrows]
+	else
+	    ms = $mdb.fetch_all start
+	end
 	# print "Got #{ms.size} records\n"
+
 	last = start + ms.size - 1
-	msg = "    Showing #{start} to #{last} of #{total} mounts"
+	if ms_search
+	    msg = "    Showing #{start} to #{last} of #{total} selected from #{db_total} mounts"
+	else
+	    msg = "    Showing #{start} to #{last} of #{total} mounts"
+	end
 	$info.text = msg
 
 	$disp.new_mounts ms
     end
+    def show_mounts_end
+	ms_search = $search.get_search
+	if ms_search
+	    total = ms_search.size
+	else
+	    total = $mdb.fetch_total_count
+	end
+	show_mounts total
+    end
 end
+
+$search = Search.new $main_win
 
 # This holds everything
 vbox = Gtk::Box.new(:vertical, 5)
 
 # We get the box from the Nav object
-nav = Nav.new
-vbox.add nav.box
+$nav = Nav.new
+vbox.add $nav.box
 
 # But we let the display object add itself
 $disp = Display.new vbox
 
-win.add(vbox)
+$main_win.add(vbox)
 
 # Always start at end of database
-nav.show_mounts $mdb.fetch_total_count
+$nav.show_mounts_end
 
-#win.signal_connect( 'delete_event' ) { false }
-win.signal_connect( "delete-event" ) { |_widget| Gtk.main_quit }
-win.signal_connect( 'destroy' ) { Gtk.main_quit }
+#$main_win.signal_connect( 'delete_event' ) { false }
+$main_win.signal_connect( "delete-event" ) { |_widget| Gtk.main_quit }
+$main_win.signal_connect( 'destroy' ) { Gtk.main_quit }
 
-win.show_all
+$main_win.show_all
 
 Gtk.main
 

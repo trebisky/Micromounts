@@ -194,6 +194,10 @@ class Mounts
 	}
 	rv
     end
+
+    def fetch_species_count ( species )
+	return $db.get_first_value "SELECT count() FROM mounts WHERE species like '%#{species}%'"
+    end
     def fetch_species ( species )
 	stm = $db.prepare "SELECT * FROM Mounts WHERE species like '%#{species}%'"
 	rs = stm.execute
@@ -204,10 +208,19 @@ class Mounts
 	}
 	rv
     end
-    def fetch_species_count ( species )
-#	row = $db.get_first_row "SELECT count(*) FROM mounts WHERE species like '%#{species}%'"
-#	return row[0]
-	return $db.get_first_value "SELECT count() FROM mounts WHERE species like '%#{species}%'"
+
+    def fetch_species_ass_count ( species )
+	return $db.get_first_value "SELECT count() FROM Mounts WHERE species like '%#{species}%' OR associations LIKE '%#{species}%'"
+    end
+    def fetch_species_ass ( species )
+	stm = $db.prepare "SELECT * FROM Mounts WHERE species like '%#{species}%' OR associations LIKE '%#{species}%'"
+	rs = stm.execute
+
+	rv = Array.new
+	rs.each { |row|
+	    rv << Mount.new( row )
+	}
+	rv
     end
     def fetch_total_count
 #	row = $db.get_first_row "SELECT count(*) FROM mounts"
