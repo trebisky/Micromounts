@@ -195,52 +195,54 @@ class Mounts
 	rv
     end
 
-    def fetch_species_count ( species )
-	return $db.get_first_value "SELECT count() FROM mounts WHERE species like '%#{species}%'"
-    end
-    def fetch_species ( species )
-	stm = $db.prepare "SELECT * FROM Mounts WHERE species like '%#{species}%'"
-	rs = stm.execute
-
-	rv = Array.new
-	rs.each { |row|
-	    rv << Mount.new( row )
-	}
-	rv
-    end
-
-    def fetch_species_ass_count ( species )
-	return $db.get_first_value "SELECT count() FROM Mounts WHERE species like '%#{species}%' OR associations LIKE '%#{species}%'"
-    end
-    def fetch_species_ass ( species )
-	stm = $db.prepare "SELECT * FROM Mounts WHERE species like '%#{species}%' OR associations LIKE '%#{species}%'"
-	rs = stm.execute
-
-	rv = Array.new
-	rs.each { |row|
-	    rv << Mount.new( row )
-	}
-	rv
-    end
-
-    def fetch_loc_count ( loc )
-	return $db.get_first_value "SELECT count() FROM mounts WHERE location like '%#{loc}%'"
-    end
-    def fetch_loc ( loc )
-	stm = $db.prepare "SELECT * FROM Mounts WHERE location like '%#{loc}%'"
-	rs = stm.execute
-
-	rv = Array.new
-	rs.each { |row|
-	    rv << Mount.new( row )
-	}
-	rv
-    end
+##    def fetch_species_count ( species )
+##	return $db.get_first_value "SELECT count() FROM mounts WHERE species like '%#{species}%'"
+##    end
+##    def fetch_species ( species )
+##	stm = $db.prepare "SELECT * FROM Mounts WHERE species like '%#{species}%'"
+##	rs = stm.execute
+##
+##	rv = Array.new
+##	rs.each { |row|
+##	    rv << Mount.new( row )
+##	}
+##	rv
+##    end
+##
+##    def fetch_species_ass_count ( species )
+##	return $db.get_first_value "SELECT count() FROM Mounts WHERE species like '%#{species}%' OR associations LIKE '%#{species}%'"
+##    end
+##    def fetch_species_ass ( species )
+##	stm = $db.prepare "SELECT * FROM Mounts WHERE species like '%#{species}%' OR associations LIKE '%#{species}%'"
+##	rs = stm.execute
+##
+##	rv = Array.new
+##	rs.each { |row|
+##	    rv << Mount.new( row )
+##	}
+##	rv
+##    end
+##
+##    def fetch_loc_count ( loc )
+##	return $db.get_first_value "SELECT count() FROM mounts WHERE location like '%#{loc}%'"
+##    end
+##    def fetch_loc ( loc )
+##	stm = $db.prepare "SELECT * FROM Mounts WHERE location like '%#{loc}%'"
+##	rs = stm.execute
+##
+##	rv = Array.new
+##	rs.each { |row|
+##	    rv << Mount.new( row )
+##	}
+##	rv
+##    end
 
     # New unified search code.
     def mk_sql ( species, loc, ass )
 	# everything - we refuse this because this would
 	# yield an array the size of the database.
+	# This works perfectly.  The search fails and the
+	# display falls back to browsing the whole database.
 	if ( loc == "" and species == "" )
 	    return nil
 	end
