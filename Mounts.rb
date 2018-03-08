@@ -430,6 +430,23 @@ class Mounts
 	return nu
     end
 
+    def clone orig
+	m_new = alloc
+
+	m_new.species = orig.species
+	m_new.associations = orig.associations
+	m_new.location = orig.location
+
+	m_new.notes = orig.notes
+	m_new.origin = orig.origin
+	m_new.source = orig.source
+	m_new.owner = orig.owner
+	m_new.status = orig.status
+	m_new.label_info = orig.label_info
+
+	insert m_new
+    end
+
 end
 
 # THE END

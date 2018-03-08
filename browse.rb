@@ -47,7 +47,7 @@ class Uno
     end
 
     # This does make a new mount
-    def tester
+    def tester1
 	x = $mdb.alloc
 	show_mount x
 	$mdb.insert x
@@ -63,6 +63,10 @@ class Uno
     def tester3
 	lm = $mdb.fetch_last
 	show_mount lm
+    end
+
+    def tester
+	$mdb.clone @cur
     end
 
     def show_mount ( m )
