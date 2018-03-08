@@ -8,3 +8,5 @@ rails
 rails/*
 box*
 zzz
+*.BAK
+*.OLD

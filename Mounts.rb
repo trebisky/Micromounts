@@ -12,6 +12,21 @@
 #  will probably yield great stability benefits.
 # I will roll my own class that embeds any necessary SQL.
 
+# Mount.setup 0 id INTEGER
+# Mount.setup 1 myid varchar(255)
+# Mount.setup 2 species varchar(255)
+# Mount.setup 3 associations varchar(255)
+# Mount.setup 4 location varchar(255)
+# Mount.setup 5 notes text
+# Mount.setup 6 origin varchar(255)
+# Mount.setup 7 source varchar(255)
+# Mount.setup 8 owner varchar(255)
+# Mount.setup 9 status varchar(255)
+# Mount.setup 10 label_info varchar(255)
+# Mount.setup 11 created_at datetime
+# Mount.setup 12 updated_at datetime
+
+
 require 'sqlite3'
 
 #$db = "minerals.sqlite3"
@@ -19,21 +34,40 @@ require 'sqlite3'
 # This is one mount
 class Mount
 
-    # at this point, ignoring type.
-    # everything saved as a string.
+    @@num_cols = nil
+
+    # Called for each row when the database is initialized
+    # at this point, I am ignoring type.
+    # everything is saved as a string.
+    # Except "id", which is an autoincrement field.
     def Mount.setup ( index, name, type )
 	stmt = "def #{name}; @data[#{index}]; end\n"
 	self.class_eval stmt
 	stmt = "def #{name}=(x); @data[#{index}]=x; end\n"
 	self.class_eval stmt
+	#puts "Mount.setup #{index} #{name} #{type}"
+	# Assuming here that we get called with the
+	# rows in order, so the last is the largest.
+	@@num_cols = index + 1
     end
 
+    # This gets called when we read a row from
+    # the database
     def initialize ( db_row )
 	@data = db_row
     end
 
+    # Read accessor
+    def data
+	@data
+    end
+
     def mk_id ( njust=10 )
-	"TT-#{myid}".ljust njust
+	if njust == nil
+	    "TT-#{myid}"
+	else
+	    "TT-#{myid}".ljust njust
+	end
     end
 
     def mk_desc ( nfill=nil )
@@ -92,18 +126,6 @@ class Mounts
 	return $db.get_first_value 'SELECT SQLITE_VERSION()'
     end
 
-    def setup_mount
-	stm = $db.prepare "PRAGMA table_info('Mounts')"
-	rs = stm.execute
-
-	# This yields one row per database column
-	rs.each { |row|
-	    Mount.setup row[0], row[1], row[2]
-	}
-    end
-
-    def show_pragma
-
 # This pragma business is sqlite specific.
 # It almost certainly won't exist in other databases.
 # It also could change in the future.
@@ -147,7 +169,7 @@ class Mounts
 # varchar will prohibit, but this does not matter to me.
 # Note that this is VERY different from other databases.
 
-
+    def show_pragma
 	stm = $db.prepare "PRAGMA table_info('Mounts')"
 	rs = stm.execute
 
@@ -160,6 +182,74 @@ class Mounts
 	    puts row.join "\s"
 	    exit
 	}
+    end
+
+    # called once during initialization
+    def setup_mount
+	stm = $db.prepare "PRAGMA table_info('Mounts')"
+	rs = stm.execute
+
+	# This yields one row per database column
+	# we have index, name, and type
+	# index runs from 0 to 12 currently
+	@names = Array.new
+	rs.each { |row|
+	    Mount.setup row[0], row[1], row[2]
+	    @names[row[0].to_i] = row[1]
+	}
+	@num_cols = @names.size
+
+	# generate comma delimited list for insert
+	# omit first item (autoincrement ID) and
+	# the last two (timestamps)
+	@ins_cols = @num_cols - 3
+	@ins_names = @names[1,@ins_cols].join(",")
+	@ins_markers = Array.new(@ins_cols,"?").join(",")
+    end
+
+    # we avoid the first item in the data array (the autoincrement ID)
+    # and the last two (we set them to the current timestamp)
+    # XXX danger here if schema changes
+    def insert ( m )
+	data = m.data
+	names = @ins_names
+	names += ",created_at"
+	names += ",updated_at"
+	marks = @ins_markers
+	marks += ",CURRENT_TIMESTAMP"
+	marks += ",CURRENT_TIMESTAMP"
+	sql = "INSERT INTO mounts(#{names}) VALUES (#{marks})"
+
+	puts sql
+	$db.execute sql, data[1,@ins_cols]
+    end
+
+    # update an existing record.
+    # we always leave the ID alone
+    # We also leave the next to last timestamp alone (created_at)
+    # We do want to update the updated_at timestamp to the current time
+    #
+    # There is a whole nuther API for this, like:
+    #  stm = db.prepare "UPDATE mounts SET species=? WHERE ID=?"
+    #  stm.bind_param 1, $species
+    #  stm.bind_param 2, $key
+    #  stm.execute
+    #  stm.close
+
+    def update ( m )
+	data = m.data
+	sql = "UPDATE mounts SET "
+
+	last = @ins_cols + 1
+	(1..last).each { |col|
+	    name = @names[col]
+	    val = data[col]
+	    sql += "#{name}='#{val}',"
+	}
+	sql += "updated_at=CURRENT_TIMESTAMP "
+	sql += "WHERE id=#{m.id.to_s}"
+	puts sql
+	$db.execute sql
     end
 
     def show_first
@@ -178,6 +268,11 @@ class Mounts
     # Fetch a single record given the id
     def fetch ( id )
 	row = $db.get_first_row "SELECT * FROM Mounts WHERE Id=#{id}"
+	return Mount.new row
+    end
+
+    def fetch_last
+	row = $db.get_first_row "SELECT * FROM mounts ORDER BY id DESC LIMIT 1"
 	return Mount.new row
     end
 
@@ -299,10 +394,42 @@ class Mounts
 #	return $db.get_first_value "SELECT count(*) FROM mounts"
 	return $db.get_first_value "SELECT count() FROM mounts"
     end
+
+    # I never use this
     def get_last_row
 	# always returns 0
 	return $db.last_insert_row_id
     end
+
+    # generate the next TT number for a new insert
+    def mk_next_id
+	lastid = fetch_last.myid
+	nn = lastid.split "-"
+	ly = nn[0].to_i
+	ln = nn[1].to_i
+	cyear = Time.now.year.to_i - 2000
+	ycode = "%02d" % cyear
+	if ly == cyear
+	    ncode = (ln+1).to_s
+	else
+	    ncode = "1"
+	end
+	return ycode + "-" + ncode
+    end
+
+    # Called to create a new empty mount
+    # that we can fill in, then insert.
+    def alloc
+	# XXX generate new TT number here.
+	init = Array.new( @num_cols, "" )
+	nu = Mount.new( init )
+	nu.myid = mk_next_id
+	nu.owner = "TT"
+	nu.status = "ok"
+	nu.origin = "bought"
+	return nu
+    end
+
 end
 
 # THE END

@@ -25,6 +25,90 @@ $lab_size = 100
 $mdb = Mounts.new
 $mdb.set_limit $nrows
 
+# Display one mount in dialog
+# XXX reuse the same dialog if up, don't keep spawning new ones.
+# Also, refresh information here, and in main display when things
+# get updated.
+class Uno
+    @dialog = nil
+
+    def initialize ( main )
+	@parent = main
+	@cur = nil
+    end
+
+    def mk_line ( label, stuff )
+	rv = Gtk::Box.new(:horizontal, 5)
+	l = Gtk::Label.new label
+	rv.pack_start( l, :expand => false, :fill => false)
+	l = Gtk::Label.new stuff
+	rv.pack_start( l, :expand => false, :fill => false)
+	rv
+    end
+
+    # This does make a new mount
+    def tester
+	x = $mdb.alloc
+	show_mount x
+	$mdb.insert x
+    end
+
+    # This does do the update
+    def tester2
+	@cur.species = "baloney"
+	$mdb.update @cur
+    end
+
+    # We can find the last record
+    def tester3
+	lm = $mdb.fetch_last
+	show_mount lm
+    end
+
+    def show_mount ( m )
+
+	# XXX
+	@cur = m
+
+	@dialog = Gtk::Dialog.new( :title => "Mount", :parent => @parent, :flags => :destroy_with_parent )
+
+	@dialog.child.add mk_line( "Mount: ", m.mk_id(nil) )	# myid
+	@dialog.child.add mk_line( "Species: ", m.species )
+	@dialog.child.add mk_line( "Associations: ", m.associations )
+	@dialog.child.add mk_line( "Location: ", m.location )
+
+	@dialog.child.add mk_line( "Created: ", m.created_at )
+	@dialog.child.add mk_line( "Updated: ", m.updated_at )
+	@dialog.child.add mk_line( "Internal ID: ", m.id.to_s )
+
+	bx = Gtk::Box.new(:horizontal, 5)
+
+	b = Gtk::Button.new( :label => "Prev" )
+	bx.pack_start( b, :expand => false, :fill => false)
+
+	b = Gtk::Button.new( :label => "Next" )
+	bx.pack_start( b, :expand => false, :fill => false)
+
+	b = Gtk::Button.new( :label => "Test" )
+	b.signal_connect( "clicked" ) {
+	    tester
+	}
+	bx.pack_start( b, :expand => false, :fill => false)
+
+	b = Gtk::Button.new( :label => "Dismiss" )
+	b.signal_connect( "clicked" ) {
+	    x = @dialog
+	    @dialog = nil
+	    x.destroy
+	}
+	bx.pack_start( b, :expand => false, :fill => false)
+
+	@dialog.child.add bx
+
+	@dialog.show_all
+    end
+end
+
 class Search
     @dialog = nil
     @parent = nil
@@ -165,10 +249,13 @@ class Display
 	if @ids[row] < 0
 	    # This happens when we have filler buttons
 	    #  at the end of the display
+	    # (should not happen now, they are greyed out)
 	    puts "Bogus button *********** !"
 	else
 	    puts "Button id: " + @ids[row].to_s
-	    $mdb.fetch( @ids[row] ).show
+	    m = $mdb.fetch( @ids[row] )
+	    m.show
+	    $uno.show_mount m
 	end
     end
 
@@ -190,12 +277,16 @@ class Display
     def setup_mount_hbox ( vbox, row )
 	hbox = Gtk::Box.new(:horizontal, 5)
 	but = mk_button( @init_but, row )
+	ckb = Gtk::CheckButton.new ""
+	# test via active?
 	lab = Gtk::Label.new @init_lab
 	nice_font lab
 	hbox.pack_start( but, :expand => false, :fill => false)
+	hbox.pack_start( ckb, :expand => false, :fill => false)
 	hbox.pack_start( lab, :expand => false, :fill => true)
 	vbox.add(hbox)
 	@buts << but
+	@cks << ckb
 	@labs << lab
 	@ids << 99
     end
@@ -205,6 +296,7 @@ class Display
 	@init_lab = "x" * $lab_size
 
 	@buts = Array.new
+	@cks = Array.new
 	@labs = Array.new
 	@ids = Array.new $nrows, 13
 
@@ -217,12 +309,18 @@ class Display
 	row = 0
 	ms.each { |m|
 	    @buts[row].label = m.mk_id
+	    @buts[row].sensitive = true
+	    @cks[row].set_active false
+	    @cks[row].sensitive = true
 	    @labs[row].text = m.mk_desc
 	    @ids[row] = m.id
 	    row += 1
 	}
 	while row < $nrows
 	    @buts[row].label = " "
+	    @buts[row].sensitive = false  # grey out
+	    @cks[row].set_active false  # turn off check mark
+	    @cks[row].sensitive = false
 	    @labs[row].text = " "
 	    @ids[row] = -1
 	    row += 1
@@ -341,6 +439,7 @@ class Nav
 end
 
 $search = Search.new $main_win
+$uno = Uno.new $main_win
 
 # This holds everything
 vbox = Gtk::Box.new(:vertical, 5)
