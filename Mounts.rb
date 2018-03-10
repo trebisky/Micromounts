@@ -28,6 +28,10 @@
 
 # At this point label_info is bogus and is never used.
 
+# In the current database, records 1-849 match record number and id.
+# Then at record 850, we see id 857, so between record 849 and 850,
+# we have a gap of 7 ID numbers (maybe I deleted records?)
+
 require 'sqlite3'
 
 #$db = "minerals.sqlite3"
@@ -269,11 +273,42 @@ class Mounts
     # Fetch a single record given the id
     def fetch ( id )
 	row = $db.get_first_row "SELECT * FROM Mounts WHERE Id=#{id}"
+	#puts "Nil fetch for #{id.to_s}" if row == nil
+	return nil if row == nil
 	return Mount.new row
+    end
+
+    # Because of a known gap after TT-12-93, we have to add
+    # logic here to skip gaps, forwards or backwards
+    def fetch_prev ( id )
+	pid = id - 1
+	loop {
+	    return nil if pid < 1
+	    rv = fetch pid
+	    return rv if rv != nil
+	    pid -= 1
+	}
+    end
+
+    def fetch_next ( id )
+	max = fetch_last.id
+	nid = id + 1
+	loop {
+	    return nil if nid > max
+	    rv = fetch nid
+	    return rv if rv != nil
+	    nid += 1
+	}
     end
 
     def fetch_last
 	row = $db.get_first_row "SELECT * FROM mounts ORDER BY id DESC LIMIT 1"
+	return Mount.new row
+    end
+
+    def fetch_myid ( myid )
+	row = $db.get_first_row "SELECT * FROM Mounts WHERE myid=#{myid}"
+	return nil if row == nil
 	return Mount.new row
     end
 
