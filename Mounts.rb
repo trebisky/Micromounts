@@ -272,7 +272,7 @@ class Mounts
 
     # Fetch a single record given the id
     def fetch ( id )
-	row = $db.get_first_row "SELECT * FROM Mounts WHERE Id=#{id}"
+	row = $db.get_first_row "SELECT * FROM mounts WHERE id=#{id}"
 	#puts "Nil fetch for #{id.to_s}" if row == nil
 	return nil if row == nil
 	return Mount.new row
@@ -306,8 +306,11 @@ class Mounts
 	return Mount.new row
     end
 
+    # Since these things are of the form 15-3
+    # They need to get passed in via the ? syntax
+    # or sqlite thinks we want to do arithmetic
     def fetch_myid ( myid )
-	row = $db.get_first_row "SELECT * FROM Mounts WHERE myid=#{myid}"
+	row = $db.get_first_row "SELECT * FROM mounts WHERE myid=?", myid
 	return nil if row == nil
 	return Mount.new row
     end

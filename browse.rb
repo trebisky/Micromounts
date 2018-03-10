@@ -362,9 +362,13 @@ class Search
 	@parent = main
     end
 
+# This is not quite right since show_mounts is
+# really dealing with record numbers, not id numbers
     def fetch_tt ( myid )
-	id = myid.to_i
-	$nav.show_mounts id
+	mm = $mdb.fetch_myid ( myid )
+	if mm != nil
+	    $nav.show_mounts mm.id
+	end
     end
 
     def show_dialog
@@ -567,6 +571,9 @@ class Display
     end
 end
 
+# We have a problem in that this set of routines paginates by
+# record number, whereas "id" may or may not correspond to the
+# record number.  In fact we have a 7 entry gap after id 849.
 class Nav
 
     def nav_button ( box, label )
