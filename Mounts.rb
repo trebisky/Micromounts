@@ -26,6 +26,7 @@
 # Mount.setup 11 created_at datetime
 # Mount.setup 12 updated_at datetime
 
+# At this point label_info is bogus and is never used.
 
 require 'sqlite3'
 
@@ -290,48 +291,6 @@ class Mounts
 	rv
     end
 
-##    def fetch_species_count ( species )
-##	return $db.get_first_value "SELECT count() FROM mounts WHERE species like '%#{species}%'"
-##    end
-##    def fetch_species ( species )
-##	stm = $db.prepare "SELECT * FROM Mounts WHERE species like '%#{species}%'"
-##	rs = stm.execute
-##
-##	rv = Array.new
-##	rs.each { |row|
-##	    rv << Mount.new( row )
-##	}
-##	rv
-##    end
-##
-##    def fetch_species_ass_count ( species )
-##	return $db.get_first_value "SELECT count() FROM Mounts WHERE species like '%#{species}%' OR associations LIKE '%#{species}%'"
-##    end
-##    def fetch_species_ass ( species )
-##	stm = $db.prepare "SELECT * FROM Mounts WHERE species like '%#{species}%' OR associations LIKE '%#{species}%'"
-##	rs = stm.execute
-##
-##	rv = Array.new
-##	rs.each { |row|
-##	    rv << Mount.new( row )
-##	}
-##	rv
-##    end
-##
-##    def fetch_loc_count ( loc )
-##	return $db.get_first_value "SELECT count() FROM mounts WHERE location like '%#{loc}%'"
-##    end
-##    def fetch_loc ( loc )
-##	stm = $db.prepare "SELECT * FROM Mounts WHERE location like '%#{loc}%'"
-##	rs = stm.execute
-##
-##	rv = Array.new
-##	rs.each { |row|
-##	    rv << Mount.new( row )
-##	}
-##	rv
-##    end
-
     # New unified search code.
     def mk_sql ( species, loc, ass )
 	# everything - we refuse this because this would
@@ -389,9 +348,8 @@ class Mounts
     end
 
     def fetch_total_count
-#	row = $db.get_first_row "SELECT count(*) FROM mounts"
+#	row = $db.get_first_row "SELECT count() FROM mounts"
 #	return row[0]
-#	return $db.get_first_value "SELECT count(*) FROM mounts"
 	return $db.get_first_value "SELECT count() FROM mounts"
     end
 
@@ -427,6 +385,7 @@ class Mounts
 	nu.owner = "TT"
 	nu.status = "ok"
 	nu.origin = "bought"
+	nu.label_info = ""	# never used.
 	return nu
     end
 
@@ -442,7 +401,6 @@ class Mounts
 	m_new.source = orig.source
 	m_new.owner = orig.owner
 	m_new.status = orig.status
-	m_new.label_info = orig.label_info
 
 	insert m_new
     end
