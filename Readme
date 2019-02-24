@@ -1,0 +1,9 @@
+I began work on this in March of 2018, then dropped it until
+February of 2019.
+
+See /home/tom/bin for the scripts micros and micros2
+See /u1/rails/micromounts (which should still work).
+
+The database itself is minerals.sqlite3 (297984 bytes).
+This is a verbatim copy of /u1/rails/micromounts/db/development.sqlite3
+

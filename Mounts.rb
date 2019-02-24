@@ -37,6 +37,7 @@ require 'sqlite3'
 #$db = "minerals.sqlite3"
 
 # This is one mount
+# database access is via the Mounts class
 class Mount
 
     @@num_cols = nil

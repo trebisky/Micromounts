@@ -1,12 +1,17 @@
-class ApplicationController < ActionController::Base
-    # Prevent CSRF attacks by raising an exception.
-    # For APIs, you may want to use :null_session instead.
-    protect_from_forgery with: :exception
+# This was pulled from my old rails code and cleaned
+#  up (a rail-ectomy) to just be nice clean ruby code.
+class Label
+
+    # delete any derelict preview files
+    def Label.cleanup
+	system "rm -f label_preview.ps"
+	system "rm -f label_preview.png"
+    end
 
     # This is shared by both the label preview code
     # and the actual label printing code so that we
     # get exactly the same result from both
-    def emit_label( f, mount )
+    def Label.emit_label ( f, mount )
 
 	species1 = mount.species.sub /^\s*/, ""
 	species1 = species1.sub /\s+.*/, ""
@@ -101,29 +106,24 @@ class ApplicationController < ActionController::Base
     # 2) to avoid collisions with just one name per label, I generate
     #    a unique name for each label preview file, this will build
     #    up and hog disk space (not a major concern).
-    def get_label
-	target_root = "label_" + @mount.myid
-	target_ps = target_root + ".ps"
-	target_png = target_root + ".png"
-
-	# 2-16-2018, play fast and loose using one file.
-	target_pnm = "label_pnm"
-
-	label_ps = Rails.root.join( 'app', 'assets', 'images', target_ps )
-	dst = Rails.root.join( 'app', 'assets', 'images', target_png )
-	pnm = Rails.root.join( 'app', 'assets', 'images', target_pnm )
+    def Label.get_label ( mm )
+	#basename = "label_" + mm.myid
+	basename = "label_preview"
+	label_ps = basename + ".ps"
+	label_png = basename + ".png"
 
 	system "rm -f #{label_ps}"
-	system "rm -f #{dst}"
+	system "rm -f #{label_png}"
 
-	boiler = Rails.root.join( 'minerals', 'label_boiler_euro.ps' )
-	system "echo #{label_ps}"
+	#boiler = 'label_boiler_euro.ps'
+	boiler = 'boiler_euro.ps'
+	#system "echo #{label_ps}"
 	system "cp #{boiler} #{label_ps}"
 
 	f = File.new label_ps, "a"
 
 	f.puts "preview"
-	emit_label f, @mount
+	Label.emit_label f, mm
 	f.puts "label3 showpage"
 
 	f.close
@@ -138,15 +138,19 @@ class ApplicationController < ActionController::Base
 	# old stale files were confusing things badly
 
 	pstoimg = "/usr/bin/pstoimg -type png -crop a -antialias -aaliastext"
-	system "#{pstoimg} -out #{dst} #{label_ps}"
+	system "#{pstoimg} -out #{label_png} #{label_ps}"
 
 	# This is unfinished and undebugged
+	# 2-16-2018, play fast and loose using one file.
+	#target_pnm = "label_pnm"
+	#pnm = target_pnm
+	#
 	#pstopnm = "/usr/bin/pstopnm"
 	#pnmtopng = "/usr/bin/pnmtopng"
 	#system "#{pstopnm} #{label_ps} #{pnm}"
 	#system "#{pnmtopng} #{pnm} #{dst}"
 
-	return target_png
+	return label_png
     end
 
 # For classic boxes the label page is 10 wide and 13 tall
@@ -166,7 +170,7 @@ class ApplicationController < ActionController::Base
 # Make several copies of each label to
 # allow for faulty printing or damage while cutting and mounting
 
-    def print_labels
+    def Label.print
 
 	# labels per sheet
 	# max_label_count = 130 (classic boxes)
@@ -175,9 +179,10 @@ class ApplicationController < ActionController::Base
 	# duplicate copies of each label
 	repeats = 4
 
-	target_file = "label_sheet.ps"
-	tmp_ps = Rails.root.join( 'app', 'assets', 'images', target_file )
-	boiler = Rails.root.join( 'minerals', 'label_boiler.ps' )
+	#tmp_ps = Rails.root.join( 'app', 'assets', 'images', target_file )
+	#boiler = Rails.root.join( 'minerals', 'label_boiler.ps' )
+	tmp_ps = target_file = "label_sheet.ps"
+	boiler = 'boiler.ps'
 	system "cp #{boiler} #{tmp_ps}"
 
 	f = File.new tmp_ps, "a"
@@ -194,7 +199,7 @@ class ApplicationController < ActionController::Base
 #		first = false
 #
 #		mount = Mount.find l.mount_id
-#		emit_label f, mount
+#		Label.emit_label f, mount
 #		f.puts "label3"
 #		sheet_count += 1
 #		break if sheet_count >= max_label_count
@@ -211,7 +216,7 @@ class ApplicationController < ActionController::Base
 		f.puts "next_label" unless first
 		first = false
 
-		emit_label f, mount
+		Label.emit_label f, mount
 		f.puts "label3"
 	    }
 	    label_count += repeats
@@ -221,6 +226,4 @@ class ApplicationController < ActionController::Base
 	f.close
     end
 
-
 end
-

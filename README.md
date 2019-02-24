@@ -9,5 +9,5 @@ questionable convenience of web access, but is a gigantic win in
 every other way.
 
 The database is in sqlite3, which is accessed via the sqlite3 gem.
-No activerecord nonsense!  The GUI is done using gtk2.
+No activerecord nonsense!  The GUI is done using gtk3.
 The labels themselves are done using postscript.
