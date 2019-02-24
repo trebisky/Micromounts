@@ -30,6 +30,10 @@ class Labelstore
         @store.clear
     end
 
+    def count
+	return @store.size
+    end
+
     def debug
 	@store.each { |m|
 	    mm = @mdb.fetch m
@@ -39,12 +43,12 @@ class Labelstore
 
     def add_mount ( m_id )
         @store << m_id
-	debug
+	#debug
     end
 
     def remove_mount ( m_id )
         @store.delete m_id
-	debug
+	#debug
     end
 
     def each
@@ -274,7 +278,7 @@ class Label
 	label_count = 0
 
 	@@store.each { |mount_id|
-	    mount = Mount.find mount_id
+	    mount = @@mdb.fetch mount_id
 	    break if label_count + repeats >= max_label_count
 	    repeats.times {
 		f.puts "next_label" unless first

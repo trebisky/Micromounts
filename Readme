@@ -7,3 +7,20 @@ See /u1/rails/micromounts (which should still work).
 The database itself is minerals.sqlite3 (297984 bytes).
 This is a verbatim copy of /u1/rails/micromounts/db/development.sqlite3
 
+Ruby GTK, and in particular gtk3 seems to be almost an orphaned project.
+Documentation is almost non-existant, but we get by.
+However, if this falls off the wagon in the future, we might have
+to port this whole project to Python-GTK.
+This would be an option if all hell breaks loose.
+
+Also, I have in no way investigated the issues involved with
+starting from scratch with the database.  I just copied the
+rails database and began working with it.  This has worked out
+fine for me, but some other person would want to set up the
+database with an appropriate schema and start creating records,
+maybe even import records from a CSV file.  Since this is not
+any kind of need of mine, I may never get around to tackling
+this, but it would be a matter of working with sqlite3 via the
+command line tool they provide.
+
+
