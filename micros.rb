@@ -245,6 +245,8 @@ class Edit
 	@r_origin[i_origin].set_active true
 
 	# label preview
+	# This image seems to be 521 by 521 pixels, although
+	# I have never needed to take that into account.
 	png_path = Label.get_label @cur
 	# png_pixbuf = Gdk::Pixbuf.new( png_path ) -- deprecated
 	png_pixbuf = GdkPixbuf::Pixbuf.new( :file => png_path )
@@ -711,6 +713,7 @@ class Nav
 
 	$disp.new_mounts ms
     end
+
     def show_mounts_end
 	ms_search = $search.get_search
 	if ms_search
@@ -758,7 +761,7 @@ $main_win = Gtk::Window.new( "Micromount browser" )
 
 # These are dialogs that can pop up eventually
 $search = Search.new $main_win
-$uno = Uno.new $main_win
+##$uno = Uno.new $main_win
 $edit = Edit.new $main_win
 Label.cleanup
 
