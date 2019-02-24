@@ -150,7 +150,7 @@ class Edit
 	$nav.refresh
     end
 
-    def setup_dialog
+    def setup_dialog ( png_file )
 	@dialog = Gtk::Dialog.new( :title => "Mount", :parent => @parent, :flags => :destroy_with_parent )
 
 	@l_myid = mk_line( @dialog, "Mount: " )
@@ -205,7 +205,17 @@ class Edit
 	}
 	bx.pack_start( b, :expand => false, :fill => false)
 
-	@dialog.child.add bx
+	# img = Gtk::Image.new png_file (deprecated)
+	img = Gtk::Image.new( :file => png_file )
+	@image = img
+
+	vb = Gtk::Box.new(:vertical, 5)
+
+	vb.pack_start( bx, :expand => false, :fill => false)
+	vb.pack_start( img, :expand => false, :fill => false)
+
+	#@dialog.child.add bx
+	@dialog.child.add vb
 
 	@dialog.show_all
 
@@ -233,6 +243,12 @@ class Edit
 
 	@r_status[i_status].set_active true
 	@r_origin[i_origin].set_active true
+
+	# label preview
+	png_path = Label.get_label @cur
+	# png_pixbuf = Gdk::Pixbuf.new( png_path ) -- deprecated
+	png_pixbuf = GdkPixbuf::Pixbuf.new( :file => png_path )
+	@image.set_from_pixbuf png_pixbuf
 
     end
 
@@ -266,9 +282,12 @@ class Edit
     # when a mount button is clicked
     def show_mount ( m )
 
-	png = Label.get_label m
+	png_path = Label.get_label m
+	#puts png
 
-	setup_dialog unless @visible
+	unless @visible
+	    setup_dialog png_path
+	end
 
 	@cur = m
 	reload
@@ -501,6 +520,20 @@ end
 
 class Display
 
+    def initialize ( vbox )
+	@init_but = "x" * $but_size
+	@init_lab = "x" * $lab_size
+
+	@buts = Array.new
+	@cks = Array.new
+	@labs = Array.new
+	@ids = Array.new $nrows, 13
+
+	$nrows.times { |row|
+	    setup_mount_hbox vbox, row
+	}
+    end
+
     def handle_button ( row )
 	#puts "Button row: " + row.to_s
 	if @ids[row] < 0
@@ -509,7 +542,7 @@ class Display
 	    # (should not happen now, they are greyed out)
 	    puts "Bogus button *********** !"
 	else
-	    puts "Button id: " + @ids[row].to_s
+	    ##puts "Button id: " + @ids[row].to_s
 	    m = $mdb.fetch( @ids[row] )
 	    # m.show
 	    # $uno.show_mount m
@@ -525,6 +558,18 @@ class Display
 	rv
     end
 
+    # This handles the label checkbutton on the index.
+    def label_callback ( b, m )
+	#print "Button: " + m.id.to_s + " " + m.mk_desc + " "
+	if b.active?
+	    #puts "Active"
+	    $ls.add_mount m.id
+	else
+	    #puts "Not active"
+	    $ls.remove_mount m.id
+       end
+    end
+
     def nice_font ( label )
 	font = "monospace 12"
 	desc = Pango::FontDescription.new font
@@ -537,7 +582,6 @@ class Display
 	but = mk_button( @init_but, row )
 	# This is actually a flavor of ToggleButton
 	ckb = Gtk::CheckButton.new ""
-	# test via active?
 	lab = Gtk::Label.new @init_lab
 	nice_font lab
 	hbox.pack_start( but, :expand => false, :fill => false)
@@ -550,29 +594,6 @@ class Display
 	@ids << 99
     end
 
-    def initialize ( vbox )
-	@init_but = "x" * $but_size
-	@init_lab = "x" * $lab_size
-
-	@buts = Array.new
-	@cks = Array.new
-	@labs = Array.new
-	@ids = Array.new $nrows, 13
-
-	$nrows.times { |row|
-	    setup_mount_hbox vbox, row
-	}
-    end
-
-    def toggle_callback ( b, m )
-	print "Button: " + m.mk_desc + " "
-	if b.active?
-	    puts "Active"
-	else
-	    puts "Not active"
-       end
-    end
-
     def new_mounts ( ms )
 	row = 0
 	# These are actually real things being displayed
@@ -583,14 +604,17 @@ class Display
 	    @ids[row] = m.id
 
 	    checker = @cks[row]
-	    checker.set_active false
+	    # ?? use either of these, but apparently we
+	    # don't need to.  They come up unchecked.
+	    #checker.set_active false
 	    #checker.active = false
-	    if $rand.rand(100) < 50
-		@cks[row].active = true
-	    end
+
+	    ##if $rand.rand(100) < 50
+	    ##	@cks[row].active = true
+	    ##end
 	    checker.sensitive = true
 	    checker.signal_connect('toggled') {
-		toggle_callback checker, m
+		label_callback checker, m
 	    }
 
 	    row += 1
@@ -705,10 +729,13 @@ class Nav
     end
 end
 
-$rand = Random.new
+##$rand = Random.new
 
 $mdb = Mounts.new
 $mdb.set_limit $nrows
+
+$ls = Labelstore.new $mdb
+Label.new $ls, $mdb
 
 Gtk::init()
 

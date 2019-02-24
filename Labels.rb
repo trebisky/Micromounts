@@ -1,6 +1,67 @@
+# Tom Trebisky 2-23-2019
+#
+# This file contains two classes.
+# Labelstore holds the list of what mounts
+#  we want to make labels from.
+# Label deals with making postscript labels,
+#  both single images for preview, and
+#  entire sheets of labels to be printed.
+
+# Labelstore --------------
+# The old rails code used a "labels" table in the database.
+# This allows the selections to be persistent.
+# The schema has an id field (never used) along
+# with created_at and updated_at fields (never used).
+# All we really want and need is "mount_id".
+# The rest are artifacts of the rails days
+# 
+# A simple and lazy (but non-persistent) approach
+# is to just use a ruby array of mount_id
+# The old rails code had Label inherit from ActiveRecord,
+# which yielded the method "find_each"
+
+class Labelstore
+    def initialize ( mdb )
+        @store = Array.new
+	@mdb = mdb
+    end
+
+    def clear
+        @store.clear
+    end
+
+    def debug
+	@store.each { |m|
+	    mm = @mdb.fetch m
+	    print "Label for: " + m.to_s + " " + mm.myid + "\n"
+	}
+    end
+
+    def add_mount ( m_id )
+        @store << m_id
+	debug
+    end
+
+    def remove_mount ( m_id )
+        @store.delete m_id
+	debug
+    end
+
+    def each
+        @store.each { |m|
+            yield m
+        }
+    end
+end
+
 # This was pulled from my old rails code and cleaned
 #  up (a rail-ectomy) to just be nice clean ruby code.
 class Label
+
+    def initialize ( store, mdb )
+	@@store = store
+	@@mdb = mdb
+    end
 
     # delete any derelict preview files
     def Label.cleanup
@@ -103,9 +164,12 @@ class Label
     # Generate a label preview
     # There are some problems with this:
     # 1) the assets/images directory must be writeable by apache
-    # 2) to avoid collisions with just one name per label, I generate
-    #    a unique name for each label preview file, this will build
-    #    up and hog disk space (not a major concern).
+    # 2) to avoid collisions with just one name per label,
+    #    in the rails version I generated
+    #    a unique name for each label preview file,
+    #    this would build up and hog disk space.
+    #     (not a major concern).
+    #    The new rails free version uses a single filename.
     def Label.get_label ( mm )
 	#basename = "label_" + mm.myid
 	basename = "label_preview"
@@ -137,7 +201,7 @@ class Label
 	# Note also that I did not have the "rm" commands above and
 	# old stale files were confusing things badly
 
-	pstoimg = "/usr/bin/pstoimg -type png -crop a -antialias -aaliastext"
+	pstoimg = "/usr/bin/pstoimg -quiet -type png -crop a -antialias -aaliastext"
 	system "#{pstoimg} -out #{label_png} #{label_ps}"
 
 	# This is unfinished and undebugged
@@ -209,8 +273,8 @@ class Label
 
 	label_count = 0
 
-	Label.find_each { |l|
-	    mount = Mount.find l.mount_id
+	@@store.each { |mount_id|
+	    mount = Mount.find mount_id
 	    break if label_count + repeats >= max_label_count
 	    repeats.times {
 		f.puts "next_label" unless first

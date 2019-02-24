@@ -122,6 +122,18 @@ class Mounts
 #	$db.results_as_hash = true
 	@limit = 25
 
+	# XXX - this is probably not needed.
+	# This is "fetch_last" placed inline here.
+	last_row = $db.get_first_row "SELECT * FROM mounts ORDER BY id DESC LIMIT 1"
+	last_mount = Mount.new last_row
+	# Not used yet, and is probably not needed since "id" is autoincrement.
+	# I thought I would need this to generate the next "id" but I confused myself.
+	@max_id = last_mount.data[0]
+	##puts "Last ID = " + @max_id.to_s
+	# Useless!  always returns zero
+	#xyz = $db.last_insert_row_id
+	#puts "Last insert row ID = " + xyz.to_s
+
 	setup_mount
     end
     def set_limit ( n )
