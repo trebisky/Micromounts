@@ -4,27 +4,29 @@
 
 /n_show { 10 string cvs show } def
 
-% Micromount labels for classic boxes will be 0.8 inches square
+% The following defines what sort of labels we
+% are generating, and their layout.
+% Micromount labels will be 0.8 inches square
 % (Dick says 20mm, which is 20/25.5 = 0.7874 inches)
 % I put a .25 inch margin on left and right
 %  This gives 10 labels left to right
 % I put a .30 inch margin top and bottom
 %  This gives 13 labels top to bottom
-
-% For Euro boxes, we make 1.0 inch square boxes
-% 8 labels left to right
-% 10 labels top to bottom
+%  for 130 labels on a sheet.
+% ---
+% Euro labels are 1.0 inch (box is 1.1 inch).
+% We will get 8 left to right, 10 top to bottom
+%  for 80 labels on a sheet.
 
 % /lsize 0.8 inch def
-/lsize 1.8 inch def
+% /num_lr 10 def
+% /num_tb 13 def
 
-% number of labels, left-right, up-down
-% /numx 10
-% /numy 13
-/numx 8 def
-/numy 10 def
-numx 1 sub /limx exch def
-numy 1 sub /limy exch def
+/lsize 1.0 inch def
+/num_lr 8 def
+/num_tb 10 def
+
+% ---------------------
 
 /lxpos 0 def
 /lypos 0 def
@@ -32,10 +34,13 @@ numy 1 sub /limy exch def
 /xpos 0 def
 /ypos 0 def
 
-/left 0.25 inch def
-/right lsize numx mul left add def
-/bottom 0.30 inch def
-/top lsize numy mul bottom add def
+% set our "origin" at bottom left
+% /left 0.25 inch def
+/left 0.1 inch def
+/bottom 0.50 inch def
+
+/right lsize num_lr mul left add def
+/top lsize num_tb mul bottom add def
 
 % Output our faint grid
 
@@ -102,17 +107,26 @@ numy 1 sub /limy exch def
 
 % This starts a "label sequencer" that starts
 % at the upper left and reads like a book.
+% We use our real-estate sparsely, leaving a
+% blank label to left and right, so we only
+% get 40 lables to a sheet instead of 130.
 
 /start_label {
+%    /nxlab 1 def
     /nxlab 0 def
-    /nylab limy def
+    /nylab num_tb def
+    nylab 1 sub /nylab exch def
     nxlab nylab movelabel
 } def
 
 /next_label {
+%    nxlab 2 add /nxlab exch def
     nxlab 1 add /nxlab exch def
-    nxlab limx gt {
+%    nxlab 7 gt {
+%    nxlab 9 gt {
+    nxlab num_lr ge {
 	nylab 1 sub /nylab exch def
+%	/nxlab 1 def
 	/nxlab 0 def
     } if
     nxlab nylab movelabel

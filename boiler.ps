@@ -4,14 +4,25 @@
 
 /n_show { 10 string cvs show } def
 
+% The following defines what sort of labels we
+% are generating, and their layout.
 % Micromount labels will be 0.8 inches square
 % (Dick says 20mm, which is 20/25.5 = 0.7874 inches)
 % I put a .25 inch margin on left and right
 %  This gives 10 labels left to right
 % I put a .30 inch margin top and bottom
 %  This gives 13 labels top to bottom
+%  for 130 labels on a sheet.
+% ---
+% Euro labels are 1.0 inch (box is 1.1 inch).
+% We will get 8 left to right, 10 top to bottom
+%  for 80 labels on a sheet.
 
 /lsize 0.8 inch def
+/num_lr 10 def
+/num_tb 13 def
+
+% ---------------------
 
 /lxpos 0 def
 /lypos 0 def
@@ -19,10 +30,13 @@
 /xpos 0 def
 /ypos 0 def
 
-/left 0.25 inch def
-/right lsize 10 mul left add def
-/bottom 0.30 inch def
-/top lsize 13 mul bottom add def
+% set our "origin" at bottom left
+% /left 0.25 inch def
+/left 0.1 inch def
+/bottom 0.50 inch def
+
+/right lsize num_lr mul left add def
+/top lsize num_tb mul bottom add def
 
 % Output our faint grid
 
@@ -96,7 +110,8 @@
 /start_label {
 %    /nxlab 1 def
     /nxlab 0 def
-    /nylab 12 def
+    /nylab num_tb def
+    nylab 1 sub /nylab exch def
     nxlab nylab movelabel
 } def
 
@@ -104,7 +119,8 @@
 %    nxlab 2 add /nxlab exch def
     nxlab 1 add /nxlab exch def
 %    nxlab 7 gt {
-    nxlab 9 gt {
+%    nxlab 9 gt {
+    nxlab num_lr ge {
 	nylab 1 sub /nylab exch def
 %	/nxlab 1 def
 	/nxlab 0 def

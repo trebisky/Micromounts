@@ -65,6 +65,7 @@ class Label
     def initialize ( store, mdb )
 	@@store = store
 	@@mdb = mdb
+	@@euro = true
     end
 
     # delete any derelict preview files
@@ -183,10 +184,14 @@ class Label
 	system "rm -f #{label_ps}"
 	system "rm -f #{label_png}"
 
-	#boiler = 'label_boiler_euro.ps'
-	boiler = 'boiler_euro.ps'
+	if @@euro
+	    boiler = 'boiler_euro.ps'
+	else
+	    boiler = 'boiler.ps'
+	end
 	#system "echo #{label_ps}"
 	system "cp #{boiler} #{label_ps}"
+	system "chmod u+w #{label_ps}"
 
 	f = File.new label_ps, "a"
 
@@ -223,7 +228,8 @@ class Label
 
 # For classic boxes the label page is 10 wide and 13 tall
 #   ( One sheet can hold 130 labels )
-# For the euro boxes the label page is 8 wise and 10 tall
+# For the euro boxes the label page is 8 wide and 10 tall
+#   ( One sheet can hold 80 labels )
 #
 # For a while, I was printing 4 labels in a row that could hold 10
 # With 4 labels in a row, this gave me 4*13 = 52 labels per sheet
@@ -232,7 +238,6 @@ class Label
 #    (Now actually /u1/rails/micromounts/minerals/label_boiler_euro.ps)
 #
 #   The placement of labels on the sheet is handled there.
-#
 
 # A new way to account for my faulty printer
 # Make several copies of each label to
@@ -245,12 +250,15 @@ class Label
 	max_label_count = 80
 
 	# duplicate copies of each label
-	repeats = 4
+	# repeats = 4
+	repeats = 20
 
-	#tmp_ps = Rails.root.join( 'app', 'assets', 'images', target_file )
-	#boiler = Rails.root.join( 'minerals', 'label_boiler.ps' )
 	tmp_ps = target_file = "label_sheet.ps"
-	boiler = 'boiler.ps'
+	if @@euro
+	    boiler = 'boiler_euro.ps'
+	else
+	    boiler = 'boiler.ps'
+	end
 	system "cp #{boiler} #{tmp_ps}"
 
 	f = File.new tmp_ps, "a"
