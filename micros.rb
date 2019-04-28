@@ -19,6 +19,17 @@
 # I decided it was time to change to the official
 # final name for the project (micros.rb)
 #
+# As always with ruby, there are issues with gems.
+# After a fedora upgrade (4-2019) this would not run and
+# complained about an ATK gem missing (accessibility toolkit)
+# The fix was:
+#     gem install glib2
+#     gem install rake
+#     gem install atk
+#     gem install sqlite3
+# There is always the question of whether to rely on fedora
+# packages, or the gem system.
+#
 # Tom Trebisky 3-4-2018 -- began browse.rb
 # Tom Trebisky 3-10-2018 -- transition to micros.rb
 
