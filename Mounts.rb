@@ -456,6 +456,20 @@ class Mounts
 	insert m_new
     end
 
+    # modified from "clone" above
+    def mk_new
+	m_new = alloc
+
+	m_new.species = ""
+	m_new.associations = ""
+	m_new.location = ""
+
+	m_new.notes = ""
+	m_new.source = ""
+
+	insert m_new
+    end
+
 end
 
 # THE END

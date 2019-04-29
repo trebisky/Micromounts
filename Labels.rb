@@ -3,9 +3,10 @@
 # This file contains two classes.
 # Labelstore holds the list of what mounts
 #  we want to make labels from.
-# Label deals with making postscript labels,
+# Labelsheet deals with making postscript labels,
 #  both single images for preview, and
 #  entire sheets of labels to be printed.
+#  (I no longer call it Label to be distinct from Gtk::Label)
 
 # Labelstore --------------
 # The old rails code used a "labels" table in the database.
@@ -60,16 +61,31 @@ end
 
 # This was pulled from my old rails code and cleaned
 #  up (a rail-ectomy) to just be nice clean ruby code.
-class Label
+# This only has class methods
+
+class Labelsheet
 
     def initialize ( store, mdb )
 	@@store = store
 	@@mdb = mdb
 	@@euro = true
+        if @@euro
+          @@species_font_big = 6
+          @@species_font_small = 5
+          @@loc_font_big = 6
+          @@loc_font_small = 5
+          # ID font size is 6 in boiler
+        else
+          @@species_font_big = 6
+          @@species_font_small = 5
+          @@loc_font_big = 5
+          @@loc_font_small = 4
+          # ID font size is 5 in boiler
+        end
     end
 
     # delete any derelict preview files
-    def Label.cleanup
+    def Labelsheet.cleanup
 	system "rm -f label_preview.ps"
 	system "rm -f label_preview.png"
     end
@@ -77,7 +93,7 @@ class Label
     # This is shared by both the label preview code
     # and the actual label printing code so that we
     # get exactly the same result from both
-    def Label.emit_label ( f, mount )
+    def Labelsheet.emit_label ( f, mount )
 
 	species1 = mount.species.sub /^\s*/, ""
 	species1 = species1.sub /\s+.*/, ""
@@ -91,6 +107,11 @@ class Label
 
 	longest_sp = species1.size
 	longest_sp = species2.size if species2.size > longest_sp
+
+        # The value of 16 (now 20 for euro boxes) was
+        #  determined by trial and error, we can only guess
+        #  if we are using a proportional font (unless we
+        #  want to go to a LOT of trouble).
 
 	# Decide to use smaller font for species
 	# small_sp = longest_sp > 16 (classic)
@@ -118,11 +139,17 @@ class Label
 	}
 	loc_n = loc_a.size
 
+        # The value of 19 was right with a smaller loc font
+        #  and the classic boxes.  But for euro boxes, we use the
+        #  same font for loc as for species, so 20 will be right here.
+
 	# Decide to use smaller font for location
 	# This would also allow for 5 lines!
 	# small_loc = longest_loc > 19 (classic boxes)
-	small_loc = longest_loc > 24
+	# small_loc = longest_loc > 24 (euro with smaller font)
+	small_loc = longest_loc > 20
 
+        # We could handle 5 location lines with euro box labels
 	# display up to 4 lines of location
 	# if more than 4, skip 2 ...
 	loc1 = loc_a[0]
@@ -145,15 +172,15 @@ class Label
 	end
 
 	if small_sp
-	    f.puts "/Speciesfontsize 5 def"
+	    f.puts "/Speciesfontsize #{@@species_font_small} def"
 	else
-	    f.puts "/Speciesfontsize 6 def"
+	    f.puts "/Speciesfontsize #{@@species_font_big} def"
 	end
 
 	if small_loc
-	    f.puts "/Locfontsize 4 def"
+	    f.puts "/Locfontsize #{@@loc_font_small} def"
 	else
-	    f.puts "/Locfontsize 5 def"
+	    f.puts "/Locfontsize #{@@loc_font_big} def"
 	end
 
 	# reverse order
@@ -175,7 +202,7 @@ class Label
     #    this would build up and hog disk space.
     #     (not a major concern).
     #    The new rails free version uses a single filename.
-    def Label.get_label ( mm )
+    def Labelsheet.get_label ( mm )
 	#basename = "label_" + mm.myid
 	basename = "label_preview"
 	label_ps = basename + ".ps"
@@ -196,8 +223,8 @@ class Label
 	f = File.new label_ps, "a"
 
 	f.puts "preview"
-	Label.emit_label f, mm
-	f.puts "label3 showpage"
+	Labelsheet.emit_label f, mm
+	f.puts "label4 showpage"
 
 	f.close
 
@@ -243,7 +270,7 @@ class Label
 # Make several copies of each label to
 # allow for faulty printing or damage while cutting and mounting
 
-    def Label.print
+    def Labelsheet.print
 
 	# labels per sheet
 	# max_label_count = 130 (classic boxes)
@@ -251,7 +278,7 @@ class Label
 
 	# duplicate copies of each label
 	# repeats = 4
-	repeats = 20
+	repeats = 16
 
 	tmp_ps = target_file = "label_sheet.ps"
 	if @@euro
@@ -266,17 +293,17 @@ class Label
 	f.puts "sheet"
 	first = true
 
-#	count = Label.count
+#	count = Labelsheet.count
 ##	sheet_count = 0
 #	reps.times {
 #	loop {
-#	    Label.find_each { |l|
+#	    Labelsheet.find_each { |l|
 #		f.puts "next_label" unless first
 #		first = false
 #
 #		mount = Mount.find l.mount_id
-#		Label.emit_label f, mount
-#		f.puts "label3"
+#		Labelsheet.emit_label f, mount
+#		f.puts "label4"
 #		sheet_count += 1
 #		break if sheet_count >= max_label_count
 #	    }
@@ -292,8 +319,8 @@ class Label
 		f.puts "next_label" unless first
 		first = false
 
-		Label.emit_label f, mount
-		f.puts "label3"
+		Labelsheet.emit_label f, mount
+		f.puts "label4"
 	    }
 	    label_count += repeats
 	}

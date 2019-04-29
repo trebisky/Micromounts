@@ -35,8 +35,7 @@
 /ypos 0 def
 
 % set our "origin" at bottom left
-% /left 0.25 inch def
-/left 0.1 inch def
+/left 0.2 inch def
 /bottom 0.50 inch def
 
 /right lsize num_lr mul left add def
@@ -183,12 +182,12 @@
 } def
 
 /name {
-    IDfont 5 newfont
+    IDfont 6 newfont
     showleft
 } def
 
 /id {
-    IDfont 5 newfont
+    IDfont 6 newfont
     showright
 } def
 
@@ -264,7 +263,8 @@
     (07-34) id
 } def
 
-/label3 {
+% this is what we used to use for classic boxes
+/label33 {
     /ypos lypos lsize add def
     /xpos lxpos def
     Speciesfont 8 newfont
@@ -277,6 +277,61 @@
     0.25 yspace
 
     % 4 lines from stack
+    loc
+    loc
+    loc
+    loc
+
+    /ypos lypos 0.05 inch add def
+    movepos
+
+    (Tom Trebisky) name
+    % one line from stack
+    id
+} def
+
+% this is what we use
+/label4 {
+    /ypos lypos lsize add def
+    /xpos lxpos def
+    Speciesfont 8 newfont
+    newline
+
+    % two lines from stack
+    species
+    species
+
+    0.65 yspace
+
+    % 4 lines from stack
+    loc
+    loc
+    loc
+    loc
+
+    /ypos lypos 0.05 inch add def
+    movepos
+
+    (Tom Trebisky) name
+    % one line from stack
+    id
+} def
+
+% we could use this with euro boxes
+/label5 {
+    /ypos lypos lsize add def
+    /xpos lxpos def
+    Speciesfont 8 newfont
+    newline
+
+    % two lines from stack
+    species
+    species
+
+    0.35 yspace
+
+    % 5 lines from stack
+    loc
     loc
     loc
     loc

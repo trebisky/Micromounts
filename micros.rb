@@ -46,12 +46,8 @@ $lab_size = 100
 
 # -----------------------------------------
 
-class New
-    # TODO - create new entry from scratch
-end
-
 # Class to handle the label dialog
-class Label_diag
+class Label_dialog
     def initialize ( main )
 	@parent = main
 	@dialog = nil
@@ -60,6 +56,10 @@ class Label_diag
 
     def nuke
 	x = @dialog
+        # when called from the "Done" button this will
+        # yield a destroy event and come here twice.
+        # The following check makes that OK.
+        return unless x
 	@dialog = nil
 	@visible = false
 	x.destroy
@@ -72,7 +72,7 @@ class Label_diag
     end
 
     def print_labels
-	Label.print
+	Labelsheet.print
 	puts "label sheet printed"
     end
 
@@ -80,6 +80,10 @@ class Label_diag
 	return if @visible
 
 	@dialog = Gtk::Dialog.new( :title => "Mount", :parent => @parent, :flags => :destroy_with_parent )
+
+        # We get a "raw" destroy event when the user clicks the
+        # little "x" square at the top right.
+        @dialog.signal_connect( 'destroy' ) { nuke }
 
 	count = $ls.count
 	if count
@@ -235,6 +239,7 @@ class Edit
 	$nav.refresh
     end
 
+    # This sets up the dialog to handle a single mount for editing.
     def setup_dialog ( png_file )
 	@dialog = Gtk::Dialog.new( :title => "Mount", :parent => @parent, :flags => :destroy_with_parent )
 
@@ -280,6 +285,20 @@ class Edit
 	    clone
 	}
 	bx.pack_start( b, :expand => false, :fill => false)
+        
+        # test that @dialog is valid in case the Dismiss button
+        # generates a destroy event
+
+        # We get a "raw" destroy event when the user clicks the
+        # little "x" square at the top right.
+        @dialog.signal_connect( 'destroy' ) {
+	    x = @dialog
+            if x
+              @dialog = nil
+              @visible = nil
+              x.destroy
+            end
+        }
 
 	b = Gtk::Button.new( :label => "Dismiss" )
 	b.signal_connect( "clicked" ) {
@@ -290,14 +309,19 @@ class Edit
 	}
 	bx.pack_start( b, :expand => false, :fill => false)
 
-	# img = Gtk::Image.new png_file (deprecated)
-	img = Gtk::Image.new( :file => png_file )
-	@image = img
+        if png_file
+          # img = Gtk::Image.new png_file (deprecated)
+          img = Gtk::Image.new( :file => png_file )
+          @image = img
+        else
+          img = nil
+          @image = nil
+        end
 
 	vb = Gtk::Box.new(:vertical, 5)
 
 	vb.pack_start( bx, :expand => false, :fill => false)
-	vb.pack_start( img, :expand => false, :fill => false)
+	vb.pack_start( img, :expand => false, :fill => false) if img
 
 	#@dialog.child.add bx
 	@dialog.child.add vb
@@ -332,7 +356,7 @@ class Edit
 	# label preview
 	# This image seems to be 521 by 521 pixels, although
 	# I have never needed to take that into account.
-	png_path = Label.get_label @cur
+	png_path = Labelsheet.get_label @cur
 	# png_pixbuf = Gdk::Pixbuf.new( png_path ) -- deprecated
 	png_pixbuf = GdkPixbuf::Pixbuf.new( :file => png_path )
 	@image.set_from_pixbuf png_pixbuf
@@ -366,10 +390,10 @@ class Edit
     end
 
     # This does the initial display of a mount
-    # when a mount button is clicked
+    # when a specific mount button is clicked
     def show_mount ( m )
 
-	png_path = Label.get_label m
+	png_path = Labelsheet.get_label m
 	#puts png
 
 	unless @visible
@@ -379,100 +403,117 @@ class Edit
 	@cur = m
 	reload
     end
+
+    # This sets up the dialog for a brand new mount
+    def brand_new_mount
+        # puts "Brand new"
+
+        $mdb.mk_new
+	@cur = $mdb.fetch_last
+
+	png_path = Labelsheet.get_label @cur
+
+	unless @visible
+	    setup_dialog png_path
+	end
+
+	reload
+	$nav.refresh
+    end
 end
 
 # Display one mount in dialog
 # This turned into Edit (above) and is no longer used.
-# XXX XXX
+#
 # We might want this to have a readonly mode for the application.
 # If so, a fair amount of stuff from the above would need to
-# get retrofited to his.  In particular the business of not
+# get retrofited to this.  In particular the business of not
 # continually spawning an endless number of new dialogs, but
 # updating values in an existing one.
-class Uno
-    @dialog = nil
-
-    def initialize ( main )
-	@parent = main
-	@cur = nil
-    end
-
-    def mk_line ( label, stuff )
-	rv = Gtk::Box.new(:horizontal, 5)
-	l = Gtk::Label.new label
-	rv.pack_start( l, :expand => false, :fill => false)
-	l = Gtk::Label.new stuff
-	rv.pack_start( l, :expand => false, :fill => false)
-	rv
-    end
-
-    # This does make a new mount
-    def tester1
-	x = $mdb.alloc
-	show_mount x
-	$mdb.insert x
-    end
-
-    # This does do the update
-    def tester2
-	@cur.species = "baloney"
-	$mdb.update @cur
-    end
-
-    # We can find the last record
-    def tester3
-	lm = $mdb.fetch_last
-	show_mount lm
-    end
-
-    # Test clone, -- it works !!
-    def tester
-	$mdb.clone @cur
-    end
-
-    def show_mount ( m )
-
-	# XXX
-	@cur = m
-
-	@dialog = Gtk::Dialog.new( :title => "Mount", :parent => @parent, :flags => :destroy_with_parent )
-
-	@dialog.child.add mk_line( "Mount: ", m.mk_id(nil) )	# myid
-	@dialog.child.add mk_line( "Species: ", m.species )
-	@dialog.child.add mk_line( "Associations: ", m.associations )
-	@dialog.child.add mk_line( "Location: ", m.location )
-
-	@dialog.child.add mk_line( "Created: ", m.created_at )
-	@dialog.child.add mk_line( "Updated: ", m.updated_at )
-	@dialog.child.add mk_line( "Internal ID: ", m.id.to_s )
-
-	bx = Gtk::Box.new(:horizontal, 5)
-
-	b = Gtk::Button.new( :label => "Prev" )
-	bx.pack_start( b, :expand => false, :fill => false)
-
-	b = Gtk::Button.new( :label => "Next" )
-	bx.pack_start( b, :expand => false, :fill => false)
-
-	b = Gtk::Button.new( :label => "Test" )
-	b.signal_connect( "clicked" ) {
-	    tester
-	}
-	bx.pack_start( b, :expand => false, :fill => false)
-
-	b = Gtk::Button.new( :label => "Dismiss" )
-	b.signal_connect( "clicked" ) {
-	    x = @dialog
-	    @dialog = nil
-	    x.destroy
-	}
-	bx.pack_start( b, :expand => false, :fill => false)
-
-	@dialog.child.add bx
-
-	@dialog.show_all
-    end
-end
+#-# class Uno
+#-#     @dialog = nil
+#-# 
+#-#     def initialize ( main )
+#-# 	@parent = main
+#-# 	@cur = nil
+#-#     end
+#-# 
+#-#     def mk_line ( label, stuff )
+#-# 	rv = Gtk::Box.new(:horizontal, 5)
+#-# 	l = Gtk::Label.new label
+#-# 	rv.pack_start( l, :expand => false, :fill => false)
+#-# 	l = Gtk::Label.new stuff
+#-# 	rv.pack_start( l, :expand => false, :fill => false)
+#-# 	rv
+#-#     end
+#-# 
+#-#     # This does make a new mount
+#-#     def tester1
+#-# 	x = $mdb.alloc
+#-# 	show_mount x
+#-# 	$mdb.insert x
+#-#     end
+#-# 
+#-#     # This does do the update
+#-#     def tester2
+#-# 	@cur.species = "baloney"
+#-# 	$mdb.update @cur
+#-#     end
+#-# 
+#-#     # We can find the last record
+#-#     def tester3
+#-# 	lm = $mdb.fetch_last
+#-# 	show_mount lm
+#-#     end
+#-# 
+#-#     # Test clone, -- it works !!
+#-#     def tester
+#-# 	$mdb.clone @cur
+#-#     end
+#-# 
+#-#     def show_mount ( m )
+#-# 
+#-# 	# XXX
+#-# 	@cur = m
+#-# 
+#-# 	@dialog = Gtk::Dialog.new( :title => "Mount", :parent => @parent, :flags => :destroy_with_parent )
+#-# 
+#-# 	@dialog.child.add mk_line( "Mount: ", m.mk_id(nil) )	# myid
+#-# 	@dialog.child.add mk_line( "Species: ", m.species )
+#-# 	@dialog.child.add mk_line( "Associations: ", m.associations )
+#-# 	@dialog.child.add mk_line( "Location: ", m.location )
+#-# 
+#-# 	@dialog.child.add mk_line( "Created: ", m.created_at )
+#-# 	@dialog.child.add mk_line( "Updated: ", m.updated_at )
+#-# 	@dialog.child.add mk_line( "Internal ID: ", m.id.to_s )
+#-# 
+#-# 	bx = Gtk::Box.new(:horizontal, 5)
+#-# 
+#-# 	b = Gtk::Button.new( :label => "Prev" )
+#-# 	bx.pack_start( b, :expand => false, :fill => false)
+#-# 
+#-# 	b = Gtk::Button.new( :label => "Next" )
+#-# 	bx.pack_start( b, :expand => false, :fill => false)
+#-# 
+#-# 	b = Gtk::Button.new( :label => "Test" )
+#-# 	b.signal_connect( "clicked" ) {
+#-# 	    tester
+#-# 	}
+#-# 	bx.pack_start( b, :expand => false, :fill => false)
+#-# 
+#-# 	b = Gtk::Button.new( :label => "Dismiss" )
+#-# 	b.signal_connect( "clicked" ) {
+#-# 	    x = @dialog
+#-# 	    @dialog = nil
+#-# 	    x.destroy
+#-# 	}
+#-# 	bx.pack_start( b, :expand => false, :fill => false)
+#-# 
+#-# 	@dialog.child.add bx
+#-# 
+#-# 	@dialog.show_all
+#-#     end
+#-# end
 
 class Search
     @dialog = nil
@@ -632,7 +673,6 @@ class Display
 	    ##puts "Button id: " + @ids[row].to_s
 	    m = $mdb.fetch( @ids[row] )
 	    # m.show
-	    # $uno.show_mount m
 	    $edit.show_mount m
 	end
     end
@@ -738,7 +778,7 @@ class Nav
 	@box = Gtk::Box.new(:horizontal, 5)
 
 	b = nav_button @box, "New   "
-	b.signal_connect( "clicked" ) { $new.show_dialog }
+	b.signal_connect( "clicked" ) { $edit.brand_new_mount }
 
 	b = nav_button @box, "Labels   "
 	b.signal_connect( "clicked" ) { $lab.show_dialog }
@@ -829,8 +869,8 @@ $mdb = Mounts.new
 $mdb.set_limit $nrows
 
 $ls = Labelstore.new $mdb
-Label.new $ls, $mdb
-Label.cleanup
+Labelsheet.new $ls, $mdb
+Labelsheet.cleanup
 
 Gtk::init()
 
@@ -855,7 +895,7 @@ $main_win = Gtk::Window.new( "Micromount browser" )
 $search = Search.new $main_win
 ##$uno = Uno.new $main_win
 $edit = Edit.new $main_win
-$lab = Label_diag.new $main_win
+$lab = Label_dialog.new $main_win
 
 # This holds everything
 vbox = Gtk::Box.new(:vertical, 5)
