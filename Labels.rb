@@ -149,26 +149,36 @@ class Labelsheet
 	# small_loc = longest_loc > 24 (euro with smaller font)
 	small_loc = longest_loc > 20
 
-        # We could handle 5 location lines with euro box labels
+        # We can handle 5 location lines with euro box labels!
+        # (classic labels could only have 4)
 	# display up to 4 lines of location
 	# if more than 4, skip 2 ...
 	loc1 = loc_a[0]
-	if loc_n > 3
-	    loc2 = loc_a[loc_n-3]
-	    loc3 = loc_a[loc_n-2]
-	    loc4 = loc_a[loc_n-1]
+	if loc_n > 4
+	    loc2 = loc_a[loc_n-4]
+	    loc3 = loc_a[loc_n-3]
+	    loc4 = loc_a[loc_n-2]
+	    loc5 = loc_a[loc_n-1]
+	elsif loc_n == 4
+	    loc2 = loc_a[1]
+	    loc3 = loc_a[2]
+	    loc4 = loc_a[3]
+	    loc5 = ""
 	elsif loc_n == 3
 	    loc2 = loc_a[1]
 	    loc3 = loc_a[2]
 	    loc4 = ""
+	    loc5 = ""
 	elsif loc_n == 2
 	    loc2 = loc_a[1]
 	    loc3 = ""
 	    loc4 = ""
+	    loc5 = ""
 	else
 	    loc2 = ""
 	    loc3 = ""
 	    loc4 = ""
+	    loc5 = ""
 	end
 
 	if small_sp
@@ -185,6 +195,7 @@ class Labelsheet
 
 	# reverse order
 	f.puts "(#{mount.myid})"
+	f.puts "(#{loc5})"
 	f.puts "(#{loc4})"
 	f.puts "(#{loc3})"
 	f.puts "(#{loc2})"
@@ -224,7 +235,7 @@ class Labelsheet
 
 	f.puts "preview"
 	Labelsheet.emit_label f, mm
-	f.puts "label4 showpage"
+	f.puts "label5 showpage"
 
 	f.close
 
@@ -320,7 +331,7 @@ class Labelsheet
 		first = false
 
 		Labelsheet.emit_label f, mount
-		f.puts "label4"
+		f.puts "label5"
 	    }
 	    label_count += repeats
 	}

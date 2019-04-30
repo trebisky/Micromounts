@@ -4,6 +4,8 @@ db_sq3_ver1
 Makefile
 methods
 minerals.sqlite3
+minerals.sql
+minerals.sqlite3_OLD
 rails
 rails/*
 box*
