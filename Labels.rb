@@ -68,7 +68,15 @@ class Labelsheet
     def initialize ( store, mdb )
 	@@store = store
 	@@mdb = mdb
+
+	# duplicate copies of each label
+        @@repeats = 4
+
+        # We have this switch, but a lot of the Euro specific
+        # code is wired in, so this is only a suggestion,
+        # and I don't ever expect it to be anything but true.
 	@@euro = true
+
         if @@euro
           @@species_font_big = 6
           @@species_font_small = 5
@@ -82,6 +90,10 @@ class Labelsheet
           @@loc_font_small = 4
           # ID font size is 5 in boiler
         end
+    end
+
+    def repeats ( val )
+        @@repeats = val
     end
 
     # delete any derelict preview files
@@ -287,10 +299,6 @@ class Labelsheet
 	# max_label_count = 130 (classic boxes)
 	max_label_count = 80
 
-	# duplicate copies of each label
-	# repeats = 4
-	repeats = 16
-
 	tmp_ps = target_file = "label_sheet.ps"
 	if @@euro
 	    boiler = 'boiler_euro.ps'
@@ -325,15 +333,15 @@ class Labelsheet
 
 	@@store.each { |mount_id|
 	    mount = @@mdb.fetch mount_id
-	    break if label_count + repeats >= max_label_count
-	    repeats.times {
+	    break if label_count + @@repeats >= max_label_count
+	    @@repeats.times {
 		f.puts "next_label" unless first
 		first = false
 
 		Labelsheet.emit_label f, mount
 		f.puts "label5"
 	    }
-	    label_count += repeats
+	    label_count += @@repeats
 	}
 
 	f.puts "showpage"

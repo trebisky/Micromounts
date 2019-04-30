@@ -33,6 +33,11 @@
 # Tom Trebisky 3-4-2018 -- began browse.rb
 # Tom Trebisky 3-10-2018 -- transition to micros.rb
 
+# One tunable parameter, front and center, the number
+# of repeats of each label
+# A sheet holds 80 labels, so this allows 20 mounts per sheet.
+$repeats = 4
+
 require 'gtk3'
 
 $:.unshift "."
@@ -524,9 +529,14 @@ class Search
 	@parent = main
     end
 
-# This is not quite right since show_mounts is
-# really dealing with record numbers, not id numbers
+# This attempts to show the "page" containing the mount
+# in question.  It fails sometimes because our record
+# numbers have gaps.  XXX
+# This ought to get fixed (or we could fix the database
+# to get rid of the gaps, which cause problems in other
+# places as well.
     def fetch_tt ( myid )
+        puts "Fetch: " + myid
 	mm = $mdb.fetch_myid ( myid )
 	if mm != nil
 	    $nav.show_mounts mm.id
@@ -814,6 +824,9 @@ class Nav
     # Search object
     def show_mounts ( start )
 
+        #print "show_mounts " + start.class + "\n"
+        #puts start
+
 	db_total = $mdb.fetch_total_count
 	ms_search = $search.get_search
 	if ms_search
@@ -869,7 +882,8 @@ $mdb = Mounts.new
 $mdb.set_limit $nrows
 
 $ls = Labelstore.new $mdb
-Labelsheet.new $ls, $mdb
+$ll = Labelsheet.new $ls, $mdb
+$ll.repeats ( $repeats )
 Labelsheet.cleanup
 
 Gtk::init()

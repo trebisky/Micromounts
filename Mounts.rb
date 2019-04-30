@@ -322,6 +322,7 @@ class Mounts
     # Since these things are of the form 15-3
     # They need to get passed in via the ? syntax
     # or sqlite thinks we want to do arithmetic
+    # myid is something like "19-1"
     def fetch_myid ( myid )
 	row = $db.get_first_row "SELECT * FROM mounts WHERE myid=?", myid
 	return nil if row == nil
