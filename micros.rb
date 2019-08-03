@@ -174,6 +174,27 @@ class Edit
 	e
     end
 
+# A nice tutorial --
+# https://ruby-gnome2.osdn.jp/hiki.cgi?tut-gtk2-txtw-textview
+#
+    def mk_text ( main, label )
+	hb = Gtk::Box.new(:horizontal, 5)
+	l = Gtk::Label.new label
+	hb.pack_start( l, :expand => false, :fill => false)
+
+        t = Gtk::TextView.new
+        t.editable =  true
+        t.buffer.text = "-empty-"
+
+	hb.pack_start( t, :expand => false, :fill => true, :padding => 5 )
+
+        # This vbox just to get some padding.
+	vb = Gtk::Box.new(:vertical, 5)
+	vb.pack_start( hb, :expand => false, :fill => true, :padding => 5 )
+	main.child.add vb
+	t
+    end
+
     def mk_radio ( main, label, choices )
 	rv = Gtk::Box.new(:horizontal, 5)
 	l = Gtk::Label.new label
@@ -221,7 +242,7 @@ class Edit
 	puts @e_species.text
 	puts @e_ass.text
 	puts @e_loc.text
-	puts @e_notes.text
+	puts @e_notes.buffer.text
 
 	puts @e_source.text
 
@@ -236,7 +257,7 @@ class Edit
 	@cur.associations = fix_entry @e_ass.text
 	@cur.location = fix_entry @e_loc.text
 	@cur.source = fix_entry @e_source.text
-	@cur.notes = fix_entry @e_notes.text
+	@cur.notes = fix_entry @e_notes.buffer.text
 
 	@cur.status = @@status_vals[s_index]
 	@cur.origin = @@origin_vals[o_index]
@@ -265,7 +286,7 @@ class Edit
 	@e_species = mk_entry( @dialog, "Species: " )
 	@e_ass = mk_entry( @dialog, "Associations: " )
 	@e_loc = mk_entry( @dialog, "Location: " )
-	@e_notes = mk_entry( @dialog, "Notes: " )
+	@e_notes = mk_text( @dialog, "Notes: " )
 
 	@r_status = mk_radio( @dialog, "Status", @@status_labels )
 	@r_origin = mk_radio( @dialog, "Origin", @@origin_labels )
@@ -361,7 +382,7 @@ class Edit
 	@e_species.text = @cur.species
 	@e_ass.text = @cur.associations
 	@e_loc.text = @cur.location
-	@e_notes.text = @cur.notes
+	@e_notes.buffer.text = @cur.notes
 
 	@e_source.text = @cur.source
 
