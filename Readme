@@ -4,7 +4,8 @@ I got it to a usable state 4-28-2019
 
 See /home/tom/bin for the scripts micros and micros2
 See /u1/rails/micromounts (which should still work).
-The micros script runs this project
+The micros script runs this project.
+The micros2 script runs the old and bogus rails thing
 
 The database itself is minerals.sqlite3 (297984 bytes).
 This is a verbatim copy of /u1/rails/micromounts/db/development.sqlite3
@@ -49,4 +50,27 @@ This seemed to work just fine.
 
 The bigger Euro box labels now allow for 5 lines of location information.
 
+If we have more than 5 lines (which would be quite unusual),
+the following rules apply:
+ - the first line is always used
+ - the next few lines are deleted, so as to yield only 5 overall.
 
+If this won't yield satisfactory results, the syntax described
+ in the next section can be used to take control
+
+----------------------------------------------------
+
+So what about this markup I have in the location information
+to allow some control over labels?
+
+* First the location record is split on commas.
+* any line starting with a "-" will not show on the label
+* a semicolon does not split the line, but gets turned
+    into a comman (this allows commas on a line, as well as
+    a way to join two things on one line with a comma.
+
+
+--- Other notes
+
+Only one word in the species field is used on a label,
+so a variety in parenthesis is fine, but won't appear on the label.

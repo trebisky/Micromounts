@@ -179,12 +179,13 @@ class Edit
 	l = Gtk::Label.new label
 	rv.pack_start( l, :expand => false, :fill => false)
 
+        cc = choices.clone
 	buts = Array.new
-	c_main = choices.shift
+	c_main = cc.shift
 	r_main = Gtk::RadioButton.new( :label => c_main )
 	buts << r_main
 	rv.pack_start( r_main, :expand => false, :fill => true)
-	choices.each { |c|
+	cc.each { |c|
 	    r = Gtk::RadioButton.new( :member => r_main, :label => c )
 	    buts << r
 	    rv.pack_start( r, :expand => false, :fill => true)
@@ -203,6 +204,15 @@ class Edit
 	rv
     end
 
+    # 7-31-2019
+    # If a single quote gets into a string,
+    # it will cause the SQL to blow up.
+    # Double quotes fix that.
+    # But then we would need to not keep doubling those.
+    def fix_entry ( text )
+        return text.gsub "'", "*"
+    end
+
     # call this to extract everything from the form and load it
     # back into our object, then save the modified record
     # only entry and radio gadgets could have been modified.
@@ -211,6 +221,7 @@ class Edit
 	puts @e_species.text
 	puts @e_ass.text
 	puts @e_loc.text
+	puts @e_notes.text
 
 	puts @e_source.text
 
@@ -221,10 +232,11 @@ class Edit
 	puts @@origin_vals[o_index]
 
 	# update object values
-	@cur.species = @e_species.text
-	@cur.associations = @e_ass.text
-	@cur.location = @e_loc.text
-	@cur.source = @e_source.text
+	@cur.species = fix_entry @e_species.text
+	@cur.associations = fix_entry @e_ass.text
+	@cur.location = fix_entry @e_loc.text
+	@cur.source = fix_entry @e_source.text
+	@cur.notes = fix_entry @e_notes.text
 
 	@cur.status = @@status_vals[s_index]
 	@cur.origin = @@origin_vals[o_index]
@@ -253,6 +265,7 @@ class Edit
 	@e_species = mk_entry( @dialog, "Species: " )
 	@e_ass = mk_entry( @dialog, "Associations: " )
 	@e_loc = mk_entry( @dialog, "Location: " )
+	@e_notes = mk_entry( @dialog, "Notes: " )
 
 	@r_status = mk_radio( @dialog, "Status", @@status_labels )
 	@r_origin = mk_radio( @dialog, "Origin", @@origin_labels )
@@ -348,6 +361,7 @@ class Edit
 	@e_species.text = @cur.species
 	@e_ass.text = @cur.associations
 	@e_loc.text = @cur.location
+	@e_notes.text = @cur.notes
 
 	@e_source.text = @cur.source
 
@@ -399,7 +413,7 @@ class Edit
     def show_mount ( m )
 
 	png_path = Labelsheet.get_label m
-	#puts png
+        #puts "show_mount_edit " + png_path
 
 	unless @visible
 	    setup_dialog png_path
