@@ -257,7 +257,11 @@ class Edit
 	@cur.associations = fix_entry @e_ass.text
 	@cur.location = fix_entry @e_loc.text
 	@cur.source = fix_entry @e_source.text
-	@cur.notes = fix_entry @e_notes.buffer.text
+        if @e_notes.buffer.text == "-none-"
+	  @cur.notes = ""
+        else
+	  @cur.notes = fix_entry @e_notes.buffer.text
+        end
 
 	@cur.status = @@status_vals[s_index]
 	@cur.origin = @@origin_vals[o_index]
@@ -382,7 +386,11 @@ class Edit
 	@e_species.text = @cur.species
 	@e_ass.text = @cur.associations
 	@e_loc.text = @cur.location
-	@e_notes.buffer.text = @cur.notes
+        if @cur.notes == ""
+          @e_notes.buffer.text = "-none-"
+        else
+          @e_notes.buffer.text = @cur.notes
+        end
 
 	@e_source.text = @cur.source
 
