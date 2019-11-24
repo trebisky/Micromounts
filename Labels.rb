@@ -38,15 +38,25 @@ class Labelstore
     def debug
 	@store.each { |m|
 	    mm = @mdb.fetch m
-	    print "Label for: " + m.to_s + " " + mm.myid + "\n"
+	    print "Label for: " + m.to_s + " " + mm.myid + " " + mm.species + "\n"
 	}
     end
 
+    def is_selected ( m_id )
+        return @store.include? m_id
+    end
+
+    # avoid adding duplicates - and we get an event every time
+    # we go to a new window and restore the state of a marked object,
+    # so this is essential.
     def add_mount ( m_id )
+        return if @store.include? m_id
         @store << m_id
 	#debug
     end
 
+    # We get asked to remove things that don't exist in the array,
+    # but that is apparently harmless.
     def remove_mount ( m_id )
         @store.delete m_id
 	#debug

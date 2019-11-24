@@ -74,6 +74,9 @@ class Label_dialog
 	$ls.clear
 	# XXX - also need to refresh this window
 	# XXX - refresh index window to nuke checkmarks
+        nuke
+        show_dialog
+        $nav.redraw
     end
 
     def print_labels
@@ -113,6 +116,10 @@ class Label_dialog
 
 	    b = Gtk::Button.new( :label => "Clear" )
 	    b.signal_connect( "clicked" ) { clear }
+	    @dialog.child.add b
+
+	    b = Gtk::Button.new( :label => "Debug" )
+	    b.signal_connect( "clicked" ) { $ls.debug }
 	    @dialog.child.add b
 	end
 
@@ -707,6 +714,7 @@ class Display
 
 	@buts = Array.new
 	@cks = Array.new
+	@ckmount = Array.new
 	@labs = Array.new
 	@ids = Array.new $nrows, 13
 
@@ -738,8 +746,32 @@ class Display
 	rv
     end
 
+    def nice_font ( label )
+	font = "monospace 12"
+	desc = Pango::FontDescription.new font
+	#label.text = "Font: %s" % [desc]
+	label.override_font desc
+    end
+
     # This handles the label checkbutton on the index.
-    def label_callback ( b, m )
+    def label_callback_OLD ( b, m )
+	print "Button: " + m.id.to_s + " " + m.mk_desc + " "
+	if b.active?
+	    puts "Active"
+	    $ls.add_mount m.id
+	else
+	    puts "Not active"
+	    $ls.remove_mount m.id
+       end
+    end
+
+    # This handles the label checkbutton on the index.
+    def label_callback ( b, row )
+        m = @ckmount[row]
+        unless m
+	  #print "Button: nil !!\n"
+          exit
+        end
 	#print "Button: " + m.id.to_s + " " + m.mk_desc + " "
 	if b.active?
 	    #puts "Active"
@@ -748,13 +780,6 @@ class Display
 	    #puts "Not active"
 	    $ls.remove_mount m.id
        end
-    end
-
-    def nice_font ( label )
-	font = "monospace 12"
-	desc = Pango::FontDescription.new font
-	#label.text = "Font: %s" % [desc]
-	label.override_font desc
     end
 
     def setup_mount_hbox ( vbox, row )
@@ -768,6 +793,11 @@ class Display
 	hbox.pack_start( ckb, :expand => false, :fill => false)
 	hbox.pack_start( lab, :expand => false, :fill => true)
 	vbox.add(hbox)
+
+        ckb.signal_connect('toggled') {
+            label_callback ckb, row
+        }
+
 	@buts << but
 	@cks << ckb
 	@labs << lab
@@ -782,8 +812,17 @@ class Display
 	    @buts[row].sensitive = true
 	    @labs[row].text = m.mk_desc
 	    @ids[row] = m.id
+            @ckmount[row] = m
 
-	    checker = @cks[row]
+            @cks[row].sensitive = true;
+            if $ls.is_selected m.id
+              @cks[row].active = true
+            else
+              @cks[row].active = false
+            end
+
+	    #-#checker = @cks[row]
+
 	    # ?? use either of these, but apparently we
 	    # don't need to.  They come up unchecked.
 	    #checker.set_active false
@@ -792,10 +831,10 @@ class Display
 	    ##if $rand.rand(100) < 50
 	    ##	@cks[row].active = true
 	    ##end
-	    checker.sensitive = true
-	    checker.signal_connect('toggled') {
-		label_callback checker, m
-	    }
+	    #-#checker.sensitive = true
+	    #-#checker.signal_connect('toggled') {
+	    #-#   label_callback checker, m
+	    #-#}
 
 	    row += 1
 	}
@@ -855,6 +894,10 @@ class Nav
 
 	$info = Gtk::Label.new "Insert Coin"
 	@box.pack_start( $info, :expand => false, :fill => true)
+    end
+
+    def redraw
+        show_mounts @cur
     end
 
     def box
