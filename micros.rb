@@ -33,10 +33,8 @@
 # Tom Trebisky 3-4-2018 -- began browse.rb
 # Tom Trebisky 3-10-2018 -- transition to micros.rb
 
-# One tunable parameter, front and center, the number
-# of repeats of each label
-# A sheet holds 80 labels, so this allows 20 mounts per sheet.
-$repeats = 4
+# Tunable parameters (use settings file)
+$repeats = nil
 
 require 'gtk3'
 
@@ -962,6 +960,33 @@ class Nav
     end
 end
 
+# This does not guard itself against all forms of nasty input.
+# It is easy to prepare config files that cause errors.
+def init_settings
+    begin
+      ff = File.open ".micros"
+    rescue SystemCallError
+      return
+    end
+
+    ff.each { |l|
+      next if l =~ /^#/
+      w = l.split
+      next unless w.size == 2
+      if w[0] == "repeats"
+        next unless w[1] =~ /^\d/
+        $repeats = w[1].to_i
+        $repeats = 1 if $repeats < 1
+        $repeats = 8 if $repeats > 8
+      end
+    }
+    ff.close
+end
+
+# ----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
+
 ##$rand = Random.new
 
 $mdb = Mounts.new
@@ -971,6 +996,13 @@ $ls = Labelstore.new $mdb
 $ll = Labelsheet.new $ls, $mdb
 $ll.repeats ( $repeats )
 Labelsheet.cleanup
+
+# tunable parameter, front and center, the number
+# of repeats of each label
+# A sheet holds 80 labels, so this allows 20 mounts per sheet.
+$repeats = 4
+
+init_settings()
 
 Gtk::init()
 
