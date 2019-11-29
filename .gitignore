@@ -1,7 +1,6 @@
 db_read
 db_sq3_ver1
 ./*.png
-Makefile
 methods
 minerals.sqlite3
 minerals.sql
