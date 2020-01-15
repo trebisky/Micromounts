@@ -989,6 +989,11 @@ end
 
 ##$rand = Random.new
 
+# tunable parameter, front and center, the number
+# of repeats of each label
+# A sheet holds 80 labels, so this allows 20 mounts per sheet.
+$repeats = 4
+
 $mdb = Mounts.new
 $mdb.set_limit $nrows
 
@@ -996,11 +1001,6 @@ $ls = Labelstore.new $mdb
 $ll = Labelsheet.new $ls, $mdb
 $ll.repeats ( $repeats )
 Labelsheet.cleanup
-
-# tunable parameter, front and center, the number
-# of repeats of each label
-# A sheet holds 80 labels, so this allows 20 mounts per sheet.
-$repeats = 4
 
 init_settings()
 

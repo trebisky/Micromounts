@@ -40,4 +40,12 @@ db_rails_fetch:
 db_rails_verify:
 	cmp /u1/rails/micromounts/db/development.sqlite3 minerals.sqlite3
 
+# ================
+# ================
+
+# The following gets Dicks database
+
+dickt_fetch:
+	cp ../Dickt/dt_2_2018.csv .
+
 # THE END
