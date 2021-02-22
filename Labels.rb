@@ -88,7 +88,9 @@ class Labelsheet
 	@@label_count = 80
 
 	# duplicate copies of each label
-        @@repeats = 2
+        # this value is usually overriden by the
+        # repeats() method below
+        @@repeats = 1
 
         # We have this switch, but a lot of the Euro specific
         # code is wired in, so this is only a suggestion,
