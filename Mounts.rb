@@ -344,10 +344,10 @@ class Mounts
 	rv = Array.new
 	rs.each { |row|
 	    rv << Mount.new( row )
-            debug = Mount.new ( row )
-            puts ( debug.id )
+            #debug = Mount.new ( row )
+            #puts ( debug.id )
 	}
-        puts ( "result size = " + rv.size.to_s )
+        #puts ( "result size = " + rv.size.to_s )
 	rv
     end
 
