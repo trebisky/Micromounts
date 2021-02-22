@@ -62,6 +62,10 @@ class Labelstore
 	#debug
     end
 
+    def fetch_first_id
+        return @store[0]
+    end
+
     def each
         @store.each { |m|
             yield m
@@ -79,8 +83,12 @@ class Labelsheet
 	@@store = store
 	@@mdb = mdb
 
+	# labels per sheet
+	# max_label_count = 130 (classic boxes)
+	@@label_count = 80
+
 	# duplicate copies of each label
-        @@repeats = 4
+        @@repeats = 2
 
         # We have this switch, but a lot of the Euro specific
         # code is wired in, so this is only a suggestion,
@@ -305,9 +313,7 @@ class Labelsheet
 
     def Labelsheet.print
 
-	# labels per sheet
-	# max_label_count = 130 (classic boxes)
-	max_label_count = 80
+	max_label_count = @@label_count
 
 	tmp_ps = target_file = "label_sheet.ps"
 	if @@euro
@@ -343,7 +349,7 @@ class Labelsheet
 
 	@@store.each { |mount_id|
 	    mount = @@mdb.fetch mount_id
-	    break if label_count + @@repeats >= max_label_count
+	    break if label_count + @@repeats > max_label_count
 	    @@repeats.times {
 		f.puts "next_label" unless first
 		first = false
@@ -356,6 +362,26 @@ class Labelsheet
 
 	f.puts "showpage"
 	f.close
+    end
+
+    # The idea here is to print an entire sheet of labels
+    # starting from the first mount selected.
+    # The intent is that the user only selects the first
+    # mount and we go from there.  If he selects more than one,
+    # we ignore all but the first.
+    def Labelsheet.print_sheet
+
+        label_count = @@label_count / @@repeats
+        first_mount_id = @@store.fetch_first_id
+        #puts( first_mount_id )
+        batch = $mdb.fetch_all_limit( first_mount_id, label_count )
+        #puts( "This many: " + batch.size.to_s )
+        batch.each { |row|
+          #puts row.id
+          @@store.add_mount row.id
+        }
+        # XXX - would be nice to refresh and show all the marks
+        Labelsheet.print
     end
 
 end

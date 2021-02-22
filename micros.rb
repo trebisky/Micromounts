@@ -28,7 +28,9 @@
 #     gem install atk
 #     gem install sqlite3
 # There is always the question of whether to rely on fedora
-# packages, or the gem system.
+# packages, or the gem system.  I just go ahead and use the
+# gem system, even though I have to do the above after every
+# fedora upgrade.  Same story again 12-5-2020
 #
 # Tom Trebisky 3-4-2018 -- began browse.rb
 # Tom Trebisky 3-10-2018 -- transition to micros.rb
@@ -82,6 +84,11 @@ class Label_dialog
 	puts "label sheet printed"
     end
 
+    def print_label_sheet
+	Labelsheet.print_sheet
+	puts "label sheet printed"
+    end
+
     def show_dialog
 	return if @visible
 
@@ -110,6 +117,10 @@ class Label_dialog
 	if count > 0
 	    b = Gtk::Button.new( :label => "Print" )
 	    b.signal_connect( "clicked" ) { print_labels }
+	    @dialog.child.add b
+
+	    b = Gtk::Button.new( :label => "Print Sheet" )
+	    b.signal_connect( "clicked" ) { print_label_sheet }
 	    @dialog.child.add b
 
 	    b = Gtk::Button.new( :label => "Clear" )
@@ -958,6 +969,10 @@ class Nav
     def refresh
 	show_mounts @cur
     end
+
+    def Nav.refresh
+        refresh
+    end
 end
 
 # This does not guard itself against all forms of nasty input.
@@ -989,10 +1004,11 @@ end
 
 ##$rand = Random.new
 
-# tunable parameter, front and center, the number
-# of repeats of each label
-# A sheet holds 80 labels, so this allows 20 mounts per sheet.
-$repeats = 4
+# tunable parameter, the number of repeats of each label
+#
+# A sheet holds 80 labels, so 4 allows 20 mounts per sheet.
+# A sheet holds 80 labels, so 2 allows 40 mounts per sheet.
+$repeats = 2
 
 $mdb = Mounts.new
 $mdb.set_limit $nrows

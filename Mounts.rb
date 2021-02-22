@@ -330,8 +330,37 @@ class Mounts
     end
 
     # Fetch a batch of rows given a starting id
-    def fetch_all ( id )
-	cmd = "SELECT * FROM Mounts LIMIT #{@limit} OFFSET #{id-1}"
+    # Caller gets to specify how many.
+    # This was added to support label marking of
+    # a full page via a button.
+
+    def fetch_all_limit ( id, limit )
+        # LIMIT must follow WHERE
+        # ORDER BY must follow WHERE
+        # myid is the TT-20-7 thing, id is 1038 or some such
+        #rs = $db.query "SELECT * FROM mounts WHERE id>=? LIMIT ?", id, limit
+        rs = $db.query "SELECT * FROM mounts WHERE id>=? ORDER BY id ASC LIMIT ?", id, limit
+
+	rv = Array.new
+	rs.each { |row|
+	    rv << Mount.new( row )
+            debug = Mount.new ( row )
+            puts ( debug.id )
+	}
+        puts ( "result size = " + rv.size.to_s )
+	rv
+    end
+
+    # Fetch a batch of rows given a starting offset
+    # This is usually called to get 25 items to
+    # display on screen.
+    # NOTE: !!
+    # This uses offsets in the database, which may or may not
+    # track the ID value (it does for the start of the database,
+    # but there are holes later that screw things up).
+    # So "id" here is not really the ID, but a record offset.
+    def fetch_all ( off )
+	cmd = "SELECT * FROM Mounts LIMIT #{@limit} OFFSET #{off-1}"
 	# puts cmd
 	stm = $db.prepare cmd
 	rs = stm.execute
