@@ -68,6 +68,8 @@ class Mount
 	@data
     end
 
+    # ?? how does it get myid ??
+    # It works, but I have forgotten the magic
     def mk_id ( njust=10 )
 	if njust == nil
 	    "TT-#{myid}"

@@ -158,6 +158,11 @@ class Edit
     @@origin_vals = %w(collected bought gift trade)
     @@origin_labels = %w(Collected Purchased Gift Trade)
 
+    # We generally do not allow this.
+    # At the beginning of 2021 I wanted this because
+    # I had an ununsed entry lingering at the end of 2020
+    @@allow_id_edit = false
+
     def initialize ( main )
 	@parent = main
 	@cur = nil
@@ -177,6 +182,7 @@ class Edit
 	l
     end
 
+    # a label and an entry field, for items we do edit
     def mk_entry ( main, label )
 	rv = Gtk::Box.new(:horizontal, 5)
 	l = Gtk::Label.new label
@@ -255,20 +261,25 @@ class Edit
     # only entry and radio gadgets could have been modified.
     def save
 
-	puts @e_species.text
-	puts @e_ass.text
-	puts @e_loc.text
-	puts @e_notes.buffer.text
+	#puts @e_species.text
+	#puts @e_ass.text
+	#puts @e_loc.text
+	#puts @e_notes.buffer.text
 
-	puts @e_source.text
+	#puts @e_source.text
 
 	s_index = radio_extract @r_status
 	o_index = radio_extract @r_origin
 
-	puts @@status_vals[s_index]
-	puts @@origin_vals[o_index]
+	#puts @@status_vals[s_index]
+	#puts @@origin_vals[o_index]
 
 	# update object values
+        if @@allow_id_edit
+          puts "Start: " + @e_myid.text
+          puts "Fix: " + @e_myid.text.sub(/^TT-/, "")
+          @cur.myid = fix_entry @e_myid.text.sub("TT-", "")
+        end
 	@cur.species = fix_entry @e_species.text
 	@cur.associations = fix_entry @e_ass.text
 	@cur.location = fix_entry @e_loc.text
@@ -301,7 +312,11 @@ class Edit
     def setup_dialog ( png_file )
 	@dialog = Gtk::Dialog.new( :title => "Mount", :parent => @parent, :flags => :destroy_with_parent )
 
-	@l_myid = mk_line( @dialog, "Mount: " )
+        if @@allow_id_edit
+          @e_myid = mk_entry( @dialog, "Mount: " )
+        else
+          @l_myid = mk_line( @dialog, "Mount: " )
+        end
 
 	@e_species = mk_entry( @dialog, "Species: " )
 	@e_ass = mk_entry( @dialog, "Associations: " )
@@ -393,7 +408,13 @@ class Edit
     def reload
 
 	# labels
-	@l_myid.text = @cur.mk_id(nil)
+        if @@allow_id_edit
+          #@e_myid.text = "TT-" + @cur.myid
+          @e_myid.text = @cur.mk_id(nil)
+        else
+          @l_myid.text = @cur.mk_id(nil)
+        end
+
 	@l_created.text = @cur.created_at + " UTC"
 	@l_updated.text = @cur.updated_at + " UTC"
 	@l_id.text = @cur.id.to_s
