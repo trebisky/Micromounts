@@ -66,6 +66,10 @@ class Labelstore
         return @store[0]
     end
 
+    def fetch_last_id
+        return @store[-1]
+    end
+
     def each
         @store.each { |m|
             yield m
@@ -371,10 +375,30 @@ class Labelsheet
     # The intent is that the user only selects the first
     # mount and we go from there.  If he selects more than one,
     # we ignore all but the first.
-    def Labelsheet.print_sheet
+    def Labelsheet.print_sheet_XXX
 
         label_count = @@label_count / @@repeats
         first_mount_id = @@store.fetch_first_id
+        #puts( first_mount_id )
+        batch = $mdb.fetch_all_limit( first_mount_id, label_count )
+        #puts( "This many: " + batch.size.to_s )
+        batch.each { |row|
+          #puts row.id
+          @@store.add_mount row.id
+        }
+        # XXX - would be nice to refresh and show all the marks
+        Labelsheet.print
+    end
+
+    # Here is a newer revised version of label sheet that starts
+    # from the last mount selected and fills in a full sheet.
+    # No harm done to add a label that is already in the label list
+    def Labelsheet.fill_sheet
+
+        sheet_count = @@label_count / @@repeats
+        first_mount_id = @@store.fetch_last_id
+        label_count = sheet_count - @@store.count + 1
+        #puts "Adding this many: " + label_count.to_s
         #puts( first_mount_id )
         batch = $mdb.fetch_all_limit( first_mount_id, label_count )
         #puts( "This many: " + batch.size.to_s )

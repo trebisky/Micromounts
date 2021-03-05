@@ -84,8 +84,9 @@ class Label_dialog
 	puts "label sheet printed"
     end
 
-    def print_label_sheet
-	Labelsheet.print_sheet
+    def fill_label_sheet
+	Labelsheet.fill_sheet
+	puts "label sheet filled with labels"
 	puts "label sheet printed"
     end
 
@@ -119,8 +120,8 @@ class Label_dialog
 	    b.signal_connect( "clicked" ) { print_labels }
 	    @dialog.child.add b
 
-	    b = Gtk::Button.new( :label => "Print Sheet" )
-	    b.signal_connect( "clicked" ) { print_label_sheet }
+	    b = Gtk::Button.new( :label => "Fill Sheet" )
+	    b.signal_connect( "clicked" ) { fill_label_sheet }
 	    @dialog.child.add b
 
 	    b = Gtk::Button.new( :label => "Clear" )
