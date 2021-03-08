@@ -9,7 +9,7 @@ schema.sql:
 
 # This can be used to regenerate my database via:
 
-backup.sql:
+backup:
 #	sqlite3 minerals.sqlite3 .dump >minerals.sql
 	sqlite3 minerals.sqlite3 .dump >backup.sql
 
