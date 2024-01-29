@@ -1,15 +1,36 @@
 # Makefile to fetch stuff from rails project
+# And to backup the database onto my flash stick
+#  7-29-2023
+#
+# To do a backup:
+#
+#  1 - plug in the white/blue Lexar stick
+#  2 - watch for the "Lexar" icon to appear
+#  3 - double click to mount it
+#  4 - type "make backup"
+#  5 - when done, unmount the stick
+#  6 - put the stick back in the drawer
+
+# Note that the backup syncs the whole directory, including the .git subdirectory.
+
+STICK = /run/media/tom/Lexar
 
 all:
 	echo "?"
+
+backup:
+	make dump
+	#cp -var . $(STICK)/Backup
+	rsync -auv --size-only ./ $(STICK)/Backup
 
 # This is not strictly needed
 schema.sql:
 	sqlite3 minerals.sqlite3 .schema >schema.sql
 
-# This can be used to regenerate my database via:
+# This generates a dump that could be used to regenerate
+# the database.
 
-backup:
+dump:
 #	sqlite3 minerals.sqlite3 .dump >minerals.sql
 	sqlite3 minerals.sqlite3 .dump >backup.sql
 

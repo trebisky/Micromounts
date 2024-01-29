@@ -14,6 +14,8 @@ zzz
 *.OLD
 Misc
 Misc/*
+pymin
+pymin2
 label_preview.ps
 label_preview.png
 label_sheet.ps

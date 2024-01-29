@@ -32,6 +32,23 @@
 # gem system, even though I have to do the above after every
 # fedora upgrade.  Same story again 12-5-2020
 #
+# After installing Fedora 39 from scratch 1-2024, I had to do the:
+# following.  Yes, I run gem as root.
+#
+# su
+# dnf install ruby
+# dnf install ruby-devel
+# dnf install latex2html
+# gem update
+# gem install glib2
+# gem install sqlite3
+# gem install rake
+# gem install gtk3
+#
+# rake must be installed before gtk3.  The atk gem is no longer needed.
+# The giant latex2html package is required to get pstoimg
+#
+# ================================
 # Tom Trebisky 3-4-2018 -- began browse.rb
 # Tom Trebisky 3-10-2018 -- transition to micros.rb
 
@@ -1030,7 +1047,8 @@ end
 #
 # A sheet holds 80 labels, so 4 allows 20 mounts per sheet.
 # A sheet holds 80 labels, so 2 allows 40 mounts per sheet.
-$repeats = 2
+#$repeats = 2
+$repeats = 1
 
 $mdb = Mounts.new
 $mdb.set_limit $nrows
