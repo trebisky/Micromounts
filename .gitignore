@@ -23,5 +23,6 @@ boiler_ORIG.ps
 *.csv
 bird.py
 fish.py
-pydick
+pycheck
 __pycache__
+python/__pycache__

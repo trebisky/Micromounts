@@ -1,0 +1,40 @@
+#!/bin/python3
+
+# labels
+#
+# This is a command line tool to generate sheets of labels.
+# A single argument gives the mount-id of the starting label
+# and it fills the sheet from there.
+#
+# Tom Trebisky  7-23-2024
+
+import sys
+from Micros import Micros
+from Labels import Labelsheet
+
+micro_db = "../minerals.sqlite3"
+
+if len(sys.argv) > 1 :
+    id = sys.argv[1]
+else :
+    id = "08-1"
+
+m = Micros ( micro_db )
+m.get_all ()
+#xx = m.lookup ( id )
+#print ( xx )
+print ( "Start sheet with: ", id )
+labs = m.mk_label ( id, 40 )
+m.close ()
+
+if labs == None :
+    print ( "Could not find: ", id )
+    exit ()
+
+ll = Labelsheet ( labs )
+ll.show ()
+
+#n = len(labs)
+#print ( n, " labels generated" )
+
+# THE END
