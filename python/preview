@@ -1,0 +1,40 @@
+#!/bin/python3
+
+# preview
+#
+# This is a command line tool to show the label that will
+# be generated for a given micro ID
+#
+# Tom Trebisky  7-24-2024
+
+import sys
+import os
+
+from Micros import Micros
+from Labels import Labelsheet
+
+micro_db = "../minerals.sqlite3"
+
+if len(sys.argv) > 1 :
+    id = sys.argv[1]
+else :
+    id = "08-1"
+
+m = Micros ( micro_db )
+m.get_all ()
+
+mm = m.lookup ( id )
+print ( mm )
+
+m.close ()
+
+if mm == None :
+    print ( "Could not find: ", id )
+    exit ()
+
+ll = Labelsheet ()
+p_path = ll.preview ( mm )
+
+os.system ( f"display {p_path}" )
+
+# THE END
