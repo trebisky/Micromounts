@@ -21,8 +21,13 @@ else :
 
 m = Micros ( micro_db )
 m.get_all ()
-#xx = m.lookup ( id )
-#print ( xx )
+
+mm = m.lookup ( id )
+print ( mm )
+
+hh = m.get_hash ( id )
+print ( hh )
+
 print ( "Start sheet with: ", id )
 labs = m.mk_label ( id, 40 )
 m.close ()
@@ -33,6 +38,7 @@ if labs == None :
 
 ll = Labelsheet ( labs )
 ll.show ()
+ll.preview ( mm )
 
 #n = len(labs)
 #print ( n, " labels generated" )

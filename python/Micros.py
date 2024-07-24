@@ -4,6 +4,25 @@ import sqlite3
 
 ##micro_db = "minerals.sqlite3"
 
+# Convert array to hash.
+# A more general way would use the schema for this.
+def to_hash ( mount ) :
+        hash = {}
+        hash['id'] = mount[0]
+        hash['myid'] = mount[1]
+        hash['species'] = mount[2]
+        hash['associations'] = mount[3]
+        hash['location'] = mount[4]
+        hash['notes'] = mount[5]
+        hash['origin'] = mount[6]
+        hash['source'] = mount[7]
+        hash['owner'] = mount[8]
+        hash['status'] = mount[9]
+        hash['label_info'] = mount[10]
+        hash['created_at'] = mount[11]
+        hash['updated_at'] = mount[12]
+        return hash
+
 class Micros :
     def __init__ ( self, path ) :
         self.conn = None
@@ -31,6 +50,7 @@ class Micros :
 
         for t in tables :
             print ( t )
+
 
     # schema gives:
     # (0, 'id', 'INTEGER', 1, None, 1)
@@ -78,6 +98,7 @@ class Micros :
         for r in self.rows :
             print ( r )
 
+    # return data array for id
     def lookup ( self, id ) :
         n = len ( self.rows )
         for i in range(n) :
@@ -85,6 +106,13 @@ class Micros :
                 return self.rows[i]
         return None
 
+    def get_hash ( self, id ) :
+        m = self.lookup ( id )
+        if m == None :
+            return None
+        return to_hash ( m )
+
+    # return index for id (internal only -- private)
     def lookup_i ( self, id ) :
         n = len ( self.rows )
         for i in range(n) :

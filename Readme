@@ -12,6 +12,7 @@ This is a verbatim copy of /u1/rails/micromounts/db/development.sqlite3
 
 Ruby GTK, and in particular gtk3 seems to be almost an orphaned project.
 Documentation is almost non-existant, but we get by.
+
 However, if this falls off the wagon in the future, we might have
 to port this whole project to Python-GTK.
 This would be an option if all hell breaks loose.
