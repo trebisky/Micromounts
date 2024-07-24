@@ -1,0 +1,395 @@
+%!PS-Adobe-3.0
+
+/inch { 72 mul } def
+
+/n_show { 10 string cvs show } def
+
+% The following defines what sort of labels we
+% are generating, and their layout.
+% Micromount labels will be 0.8 inches square
+% (Dick says 20mm, which is 20/25.5 = 0.7874 inches)
+% I put a .25 inch margin on left and right
+%  This gives 10 labels left to right
+% I put a .30 inch margin top and bottom
+%  This gives 13 labels top to bottom
+%  for 130 labels on a sheet.
+% ---
+% Euro labels are 1.0 inch (box is 1.1 inch).
+% We will get 8 left to right, 10 top to bottom
+%  for 80 labels on a sheet.
+
+% /lsize 0.8 inch def
+% /num_lr 10 def
+% /num_tb 13 def
+
+/lsize 1.0 inch def
+/num_lr 8 def
+/num_tb 10 def
+
+% ---------------------
+
+/lxpos 0 def
+/lypos 0 def
+
+/xpos 0 def
+/ypos 0 def
+
+% set our "origin" at bottom left
+/left 0.2 inch def
+/bottom 0.50 inch def
+
+/right lsize num_lr mul left add def
+/top lsize num_tb mul bottom add def
+
+% Output our faint grid
+
+/grid {
+    0.8 setgray
+    0.3 setlinewidth
+
+    newpath
+    bottom lsize top {
+	dup left exch moveto
+	right exch lineto
+    } for
+
+    left lsize right {
+	dup bottom moveto
+	top lineto
+    } for
+
+    stroke
+    % back to full black
+    % (should push/pop original setting).
+    0.0 setgray
+} def
+
+/onegrid {
+    0.8 setgray
+    0.3 setlinewidth
+
+    newpath
+
+    left bottom moveto
+    left bottom lsize add lineto
+    left bottom moveto
+    left lsize add bottom lineto
+    left bottom lsize add moveto
+    left lsize add bottom lsize add lineto
+    left lsize add bottom moveto
+    left lsize add bottom lsize add lineto
+
+    stroke
+    0.0 setgray
+} def
+
+/setpos {
+    /ypos exch inch def
+    /xpos exch inch def
+} def
+
+/movepos {
+    xpos ypos moveto
+} def
+
+% We can print 130 labels (10 wide by 13 tall)
+% The "label" coordinate system has its origin in
+% the lower left.
+% 9 0 movelabel puts a label in the lower right
+% 9 12 movelabel puts a label in the upper right
+
+/movelabel {
+    lsize mul bottom add /lypos exch def
+    lsize mul left add /lxpos exch def
+    lxpos lypos moveto
+} def
+
+% This starts a "label sequencer" that starts
+% at the upper left and reads like a book.
+% We use our real-estate sparsely, leaving a
+% blank label to left and right, so we only
+% get 40 lables to a sheet instead of 130.
+
+/start_label {
+%    /nxlab 1 def
+    /nxlab 0 def
+    /nylab num_tb def
+    nylab 1 sub /nylab exch def
+    nxlab nylab movelabel
+} def
+
+/next_label {
+%    nxlab 2 add /nxlab exch def
+    nxlab 1 add /nxlab exch def
+%    nxlab 7 gt {
+%    nxlab 9 gt {
+    nxlab num_lr ge {
+	nylab 1 sub /nylab exch def
+%	/nxlab 1 def
+	/nxlab 0 def
+    } if
+    nxlab nylab movelabel
+} def
+
+% -----
+
+%/lineskip 1.25 def
+/lineskip 1.15 def
+
+/yspace {
+    fontsize mul ypos exch sub /ypos exch def
+    movepos
+} def
+
+/newline {
+    lineskip yspace
+    movepos
+} def
+
+/newfont {
+	dup /fontsize exch def
+	scalefont setfont
+} def
+
+/center {
+    dup stringwidth pop
+    lsize exch sub 2 div
+    xpos add ypos moveto
+    show
+} def
+
+/showleft {
+    lxpos 0.05 inch add ypos moveto
+    show
+} def
+
+/showright {
+    dup stringwidth pop
+    lsize exch sub
+    0.05 inch sub
+    xpos add ypos moveto
+    show
+} def
+
+/species {
+    Speciesfont Speciesfontsize newfont
+    center newline
+} def
+
+/loc {
+    Locfont Locfontsize newfont
+    showleft newline
+} def
+
+/name {
+    IDfont 6 newfont
+    showleft
+} def
+
+/id {
+    IDfont 6 newfont
+    showright
+} def
+
+% --
+
+% put a little square in the lower left corner
+% of the currently selected label.
+/mark {
+	newpath
+	movepos
+	0 20 rlineto
+	20 0 rlineto
+	0 -20 rlineto
+	-20 0 rlineto
+	fill
+} def
+
+/showpos {
+    currentpoint
+    100 500 moveto
+    exch
+    n_show
+    ( == ) show
+    n_show
+    ( ++ ) show
+} def
+
+% -------------------------------
+
+/label {
+    /ypos lypos lsize add def
+    /xpos lxpos def
+    Speciesfont 8 newfont
+    newline
+
+    (Aurichalcite) species
+    (Hemimorphite) species
+
+    0.25 yspace
+
+    (Level 4) loc
+    (79 Mine) loc
+    (Gila County) loc
+    (Arizona) loc
+
+    /ypos lypos 0.05 inch add def
+    movepos
+
+    %(TTp-09-154) name
+    (Tom Trebisky) name
+    (09-154) id
+} def
+
+/label2 {
+    /ypos lypos lsize add def
+    /xpos lxpos def
+    Speciesfont 8 newfont
+    newline
+
+    (Hemimorphite) species
+    (Smithsonite) species
+
+    0.25 yspace
+
+    (79 Mine) loc
+    (Gila County) loc
+    (Arizona) loc
+
+    /ypos lypos 0.05 inch add def
+    movepos
+
+    (Tom Trebisky) name
+    (07-34) id
+} def
+
+% this is what we used to use for classic boxes
+/label33 {
+    /ypos lypos lsize add def
+    /xpos lxpos def
+    Speciesfont 8 newfont
+    newline
+
+    % two lines from stack
+    species
+    species
+
+    0.25 yspace
+
+    % 4 lines from stack
+    loc
+    loc
+    loc
+    loc
+
+    /ypos lypos 0.05 inch add def
+    movepos
+
+    (Tom Trebisky) name
+    % one line from stack
+    id
+} def
+
+% this is what we use with classic boxes,
+% but with Euro boxes, we can use 5 lines
+/label4 {
+    /ypos lypos lsize add def
+    /xpos lxpos def
+    Speciesfont 8 newfont
+    newline
+
+    % two lines from stack
+    species
+    species
+
+    0.65 yspace
+
+    % 4 lines from stack
+    loc
+    loc
+    loc
+    loc
+
+    /ypos lypos 0.05 inch add def
+    movepos
+
+    (Tom Trebisky) name
+    % one line from stack
+    id
+} def
+
+% we now use this with euro boxes !
+/label5 {
+    /ypos lypos lsize add def
+    /xpos lxpos def
+    Speciesfont 8 newfont
+    newline
+
+    % two lines from stack
+    species
+    species
+
+    0.65 yspace
+
+    % 5 lines from stack
+    loc
+    loc
+    loc
+    loc
+    loc
+
+    /ypos lypos 0.05 inch add def
+    movepos
+
+    (Tom Trebisky) name
+    % one line from stack
+    id
+} def
+
+% Do the setup required prior to generating
+% a label preview
+/preview {
+    4 4 scale
+    onegrid
+
+    0 0 movelabel
+
+} def
+
+% Do the setup required prior to printing
+% a sheet of labels
+/sheet {
+    grid
+
+    start_label
+
+} def
+
+% NOTE that "Times" is not a valid font,
+%  what you want is Times-Roman
+%/Speciesfont /Times-Bold findfont def
+%/Speciesfont /Times-Roman findfont def
+%/Locfont /Helvetica findfont def
+
+/Speciesfont /Helvetica-Bold findfont def
+/Locfont /Helvetica-Bold findfont def
+/IDfont /Helvetica-Narrow findfont def
+
+%/Speciesfontsize 6 def
+%/Locfontsize 5 def
+
+% ---------------------------------------
+
+% Append lines like this to get preview
+
+%preview
+%(myid)
+%(loc)
+%(loc)
+%(loc)
+%(Bobs Mine)
+%(assoc)
+%(Galena)
+%label3 showpage
+
+% END of boilerplate

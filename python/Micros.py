@@ -1,5 +1,6 @@
 #!/bin/python3
 
+import os
 import sqlite3
 
 ##micro_db = "minerals.sqlite3"
@@ -23,14 +24,33 @@ def to_hash ( mount ) :
         hash['updated_at'] = mount[12]
         return hash
 
+
 class Micros :
     def __init__ ( self, path ) :
         self.conn = None
         self.rows = []
+        self.mypath = Micros.grog_path ()
+        print ( "Running from: ", self.mypath )
+
+        db_path = self.mypath + "/" + path
+
         try:
-            self.conn = sqlite3.connect ( path )
-        except Error as e:
+            self.conn = sqlite3.connect ( db_path )
+        except OSError as e:
             print(e)
+
+    # The idea here is to find out where this script is running
+    # in order to generate an absolute path to find the database
+    # as well as other resources
+    # This currently gives me:
+    # /u1/Minerals/Micromounts/python/labels
+    @classmethod
+    def grog_path ( cls ) :
+        my_path = os.path.realpath ( __file__ )
+        (path, file) = os.path.split ( my_path )
+        print ( path )
+        return path
+
 
     def close ( self ) :
         self.conn.close ()

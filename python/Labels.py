@@ -31,6 +31,14 @@ class Labelsheet :
             self.loc_font_small = 4
             # ID font size is 5 in boiler
 
+        mypath = Micros.Micros.grog_path ()
+        print ( "LABELS grog = ", mypath )
+
+        if self.euro :
+            self.boiler = mypath + "/" + 'boiler_euro.ps'
+        else :
+            self.boiler = mypath + "/" + 'boiler.ps'
+
     def cleanup ( self ) :
         os.system ( "rm -f label_preview.ps" )
         os.system ( "rm -f label_preview.png" )
@@ -210,15 +218,10 @@ class Labelsheet :
 
         self.cleanup ()
 
-        if self.euro :
-            boiler = '../boiler_euro.ps'
-        else :
-            boiler = '../boiler.ps'
-
         #system "echo #{label_ps}"
         #os.system "cp #{boiler} #{label_ps}"
         #os.system "chmod u+w #{label_ps}"
-        os.system ( f"cp {boiler} {label_ps}" )
+        os.system ( f"cp {self.boiler} {label_ps}" )
         os.system ( f"chmod u+w {label_ps}" )
 
         with open ( label_ps, "a" ) as f:
@@ -272,12 +275,7 @@ class Labelsheet :
 
         tmp_ps = "label_sheet.ps"
 
-        if self.euro :
-            boiler = '../boiler_euro.ps'
-        else :
-            boiler = '../boiler.ps'
-
-        os.system ( f"cp {boiler} {tmp_ps}" )
+        os.system ( f"cp {self.boiler} {tmp_ps}" )
 
         print ( f"Make sheet with {len(mlist)} labels" )
 
