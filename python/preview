@@ -19,7 +19,7 @@ else :
     id = "08-149"
 
 m = Micros ()
-m.get_all ()
+#m.get_all ()
 
 mm = m.lookup ( id )
 print ( mm )

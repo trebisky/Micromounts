@@ -24,6 +24,13 @@ def to_hash ( mount ) :
         hash['updated_at'] = mount[12]
         return hash
 
+# We now simplify things by fetching all database records into memory
+# when this class initializes.  All requests will be served from this
+# list in memory.  This is certainly no problem whatsoever with 1300
+# records, and it is hard to imagine it will be a problem even with 10,000
+#
+# This does require some care to refresh this list when records are
+# inserted or updated.
 
 class Micros :
     def __init__ ( self ) :
@@ -41,6 +48,19 @@ class Micros :
             self.conn = sqlite3.connect ( db_path )
         except OSError as e:
             print(e)
+
+        self.get_all ()
+        print ( f"{len(self.rows)} entries in database"  )
+
+    def get_all ( self ) :
+        cur = self.conn.cursor ()
+        cur.execute ( "SELECT * from mounts" )
+        self.rows = cur.fetchall ()
+        cur.close ()
+
+    # Someday this may do more that get_all()
+    def refresh ( self ) :
+        self.get_all ()
 
     # The idea here is to find out where this script is running
     # in order to generate an absolute path to find the database
@@ -109,13 +129,6 @@ class Micros :
         #cursor.fetchone()[0]
         print ( row )
 
-    def get_all ( self ) :
-        cur = self.conn.cursor ()
-        cur.execute ( "SELECT * from mounts" )
-        self.rows = cur.fetchall ()
-        cur.close ()
-
-        print ( f"{len(self.rows)} entries in database"  )
 
     def show_all ( self ) :
         for r in self.rows :
@@ -164,6 +177,7 @@ class Micros :
         rv = []
         for id in id_list :
             x = self.lookup ( id )
+            #print ( id, x )
             if x != None :
                 rv.append ( x )
 
@@ -195,6 +209,8 @@ class Micros :
 
         cur.close ()
         self.conn.commit ()
+
+        self.refresh ()
 
         print ( "Update done" )
 

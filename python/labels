@@ -3,8 +3,9 @@
 # labels
 #
 # This is a command line tool to generate sheets of labels.
-# A single argument gives the mount-id of the starting label
-# and it fills the sheet from there.
+# The argument list can be any number of ID for which labels
+# are desired.  The sheet will be filled following the last
+# label in that list.
 #
 # Tom Trebisky  7-23-2024
 
@@ -17,16 +18,19 @@ from Labels import Labelsheet
 #my_path = Micros.grog_path ()
 #print ( "Running: ", my_path )
 
-if len(sys.argv) > 1 :
-    id = sys.argv[1]
-else :
-    id = "08-1"
-
 id_list = []
-id_list.append ( id )
+
+if len(sys.argv) <= 1 :
+    id_list.append ( "08-149" )
+else :
+    for id in sys.argv[1:] :
+        id_list.append ( id )
+
+#for x in id_list :
+#    print ( x )
 
 m = Micros ()
-m.get_all ()
+#m.get_all ()
 
 #mm = m.lookup ( id )
 #print ( mm )
@@ -36,8 +40,15 @@ m.get_all ()
 
 print ( "Start sheet with: ", id )
 labs = m.mk_label ( id_list, 80 )
+if labs == None :
+    print ( "Cannot find starting ID" )
+    exit ()
+
 n = len(labs)
 print ( n, " labels generated" )
+
+#for l in labs :
+#    print ( l )
 
 m.close ()
 
