@@ -6,6 +6,7 @@ methods
 minerals.sqlite3
 minerals.sql
 minerals.sqlite3_OLD
+minerals.sqlite3_BAK
 rails
 rails/*
 box*

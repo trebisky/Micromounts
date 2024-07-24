@@ -13,14 +13,12 @@ import os
 from Micros import Micros
 from Labels import Labelsheet
 
-micro_db = "../minerals.sqlite3"
-
 if len(sys.argv) > 1 :
     id = sys.argv[1]
 else :
-    id = "08-1"
+    id = "08-149"
 
-m = Micros ( micro_db )
+m = Micros ()
 m.get_all ()
 
 mm = m.lookup ( id )

@@ -17,24 +17,28 @@ from Labels import Labelsheet
 #my_path = Micros.grog_path ()
 #print ( "Running: ", my_path )
 
-micro_db = "minerals.sqlite3"
-
 if len(sys.argv) > 1 :
     id = sys.argv[1]
 else :
     id = "08-1"
 
-m = Micros ( micro_db )
+id_list = []
+id_list.append ( id )
+
+m = Micros ()
 m.get_all ()
 
-mm = m.lookup ( id )
-print ( mm )
+#mm = m.lookup ( id )
+#print ( mm )
 
-hh = m.get_hash ( id )
-print ( hh )
+#hh = m.get_hash ( id )
+#print ( hh )
 
 print ( "Start sheet with: ", id )
-labs = m.mk_label ( id, 40 )
+labs = m.mk_label ( id_list, 80 )
+n = len(labs)
+print ( n, " labels generated" )
+
 m.close ()
 
 if labs == None :
@@ -42,11 +46,6 @@ if labs == None :
     exit ()
 
 ll = Labelsheet ()
-#ll.show ()
-ll.preview ( mm )
 ll.sheet ( labs )
-
-#n = len(labs)
-#print ( n, " labels generated" )
 
 # THE END

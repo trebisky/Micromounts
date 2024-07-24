@@ -26,13 +26,16 @@ def to_hash ( mount ) :
 
 
 class Micros :
-    def __init__ ( self, path ) :
+    def __init__ ( self ) :
         self.conn = None
         self.rows = []
+
         self.mypath = Micros.grog_path ()
         print ( "Running from: ", self.mypath )
 
-        db_path = self.mypath + "/" + path
+        db_path = self.mypath + "/" + "minerals.sqlite3"
+
+        print ( "Database: ", db_path )
 
         try:
             self.conn = sqlite3.connect ( db_path )
@@ -141,7 +144,9 @@ class Micros :
                 return i
         return None
 
-    def mk_label ( self, id, num ) :
+    # Original version -- fill sheet with labels
+    # starting with the given id
+    def mk_label_OLD ( self, id, num ) :
         i = self.lookup_i ( id )
         if i == None :
             return None
@@ -152,14 +157,45 @@ class Micros :
         #    print ( l )
         return labels
 
-# m = Micros ( micro_db )
-# m.tables ()
-# m.schema ( "mounts" )
-# m.get_id ( "08-1" )
-# m.get_id ( "22-100" )
-# m.get_all ()
-# #m.show_all ()
-# m.mk_label ( "08-110" )
-# m.close ()
+    # return a list of "records" that will fill a sheet
+    # The list given will start things off,
+    # then we fill from the last entry.
+    def mk_label ( self, id_list, num ) :
+        rv = []
+        for id in id_list :
+            x = self.lookup ( id )
+            if x != None :
+                rv.append ( x )
+
+        if len(rv) == 0 :
+            return None
+
+        # get myid of last item added above
+        last_id = rv[-1][1]
+        i = self.lookup_i ( last_id )
+        nadd = num - len(rv) + 1
+        rv.extend ( self.rows[i+1:i+nadd] )
+        return rv
+
+    def update ( self, id, update_hash ) :
+        cmd = "UPDATE mounts SET "
+        for (name,val) in update_hash.items() :
+            cmd += f"{name}='{val}',"
+        cmd += "updated_at=CURRENT_TIMESTAMP "
+        cmd += f"WHERE id={id}"
+
+        print ( cmd )
+        cur = self.conn.cursor ()
+
+        try:
+            cur.execute ( cmd )
+        except sqlite3.Error as er:
+            print(er.sqlite_errorcode)
+            print(er.sqlite_errorname)
+
+        cur.close ()
+        self.conn.commit ()
+
+        print ( "Update done" )
 
 # THE END
