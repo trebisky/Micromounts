@@ -5,21 +5,26 @@ import re
 import Micros
 
 class Labelsheet :
-    def __init__ ( self, micros ) :
-        self.micros = micros
+    #def __init__ ( self, micros ) :
+    def __init__ ( self ) :
+        #self.micros = micros
 
         self.euro = True
+
+        # I no longer find printing duplicate labels
+        # useful -- it used to be insurance against bad
+        # printing by my ancient HP laserjet
         self.repeats = 1
 
         if self.euro :
-            self.count = 80
+            self.max_count = 80
             self.species_font_big = 6
             self.species_font_small = 5
             self.loc_font_big = 6
             self.loc_font_small = 5
             # ID font size is 6 in boiler
         else :
-            self.count = 130
+            self.max_count = 130
             self.species_font_big = 6
             self.species_font_small = 5
             self.loc_font_big = 5
@@ -30,13 +35,13 @@ class Labelsheet :
         os.system ( "rm -f label_preview.ps" )
         os.system ( "rm -f label_preview.png" )
 
-    def show_all ( self ) :
-        for m in self.micros :
-            print ( m )
-
-    def show ( self ) :
-        print ( len(self.micros), " generated" )
-        #self.show_all ()
+#    def show_all ( self ) :
+#        for m in self.micros :
+#            print ( m )
+#
+#    def show ( self ) :
+#        print ( len(self.micros), " generated" )
+#        #self.show_all ()
 
     # This is shared by both the label preview code
     # and the actual label printing code so that we
@@ -248,7 +253,55 @@ class Labelsheet :
 
         return label_png
 
-    def print_sheet ( self ) :
-        pass
+# For classic boxes the label page is 10 wide and 13 tall
+#   ( One sheet can hold 130 labels )
+# For the euro boxes the label page is 8 wide and 10 tall
+#   ( One sheet can hold 80 labels )
+#
+# For a while, I was printing 4 labels in a row that could hold 10
+# With 4 labels in a row, this gave me 4*13 = 52 labels per sheet
+#
+# The label boilerplate is in /u1/rails/micromounts/minerals/label_boiler.ps
+#    (Now actually /u1/rails/micromounts/minerals/label_boiler_euro.ps)
+#
+#   The placement of labels on the sheet is handled there.
+
+    def sheet ( self, mlist ) :
+
+        max_label_count = self.max_count
+
+        tmp_ps = "label_sheet.ps"
+
+        if self.euro :
+            boiler = '../boiler_euro.ps'
+        else :
+            boiler = '../boiler.ps'
+
+        os.system ( f"cp {boiler} {tmp_ps}" )
+
+        print ( f"Make sheet with {len(mlist)} labels" )
+
+        with open ( tmp_ps, "a" ) as f:
+            f.write ( "sheet\n" )
+
+            first = True
+            label_count = 0
+
+            for mount in mlist :
+                #mount = @@mdb.fetch mount_id
+                if label_count + self.repeats > max_label_count :
+                    break
+
+                for _ in range ( self.repeats ) :
+                    if not first :
+                        f.write ( "next_label\n" )
+                    first = False
+
+                    self.emit_label ( f, mount )
+                    f.write ( "label5\n" )
+
+                label_count += self.repeats
+
+            f.write ( "showpage\n" )
 
 # THE END

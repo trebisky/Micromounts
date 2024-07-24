@@ -36,9 +36,10 @@ if labs == None :
     print ( "Could not find: ", id )
     exit ()
 
-ll = Labelsheet ( labs )
-ll.show ()
+ll = Labelsheet ()
+#ll.show ()
 ll.preview ( mm )
+ll.sheet ( labs )
 
 #n = len(labs)
 #print ( n, " labels generated" )
