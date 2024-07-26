@@ -21,6 +21,8 @@ class Display ( wx.Panel ) :
             self.db = db
             self.n_lines = n_lines
 
+            self.preview = None
+
             self.data = self.db.all ()
             self.n_data = len ( self.data )
             self.cur = None
@@ -36,6 +38,20 @@ class Display ( wx.Panel ) :
             #self.__load_display ( 0 )
             #self.__load_display ( 1270 )
             self.__load_display ( self.n_data - self.n_lines )
+
+        # lookup and return entry
+        def __lookup_id ( self, my_id ) :
+            for m in self.data :
+                if m[m_MYID] == my_id :
+                    return m
+            return None
+
+        # lookup and return index of entry
+        def __lookup_I ( self, my_id ) :
+            for i in range(len(self.data)) :
+                if self.data[i][m_MYID] == my_id :
+                    return i
+            return None
 
         def onNav ( self, event ) :
             obj = event.GetEventObject()
@@ -57,6 +73,14 @@ class Display ( wx.Panel ) :
                 return
             if action == "End" :
                 self.__load_display ( self.n_data - self.n_lines )
+                return
+            if action == "Find" :
+                xx = self.find.GetValue()
+                print ( "Look for: ", xx )
+                ii = self.__lookup_I ( xx )
+                if ii == None :
+                    print ( xx, " not found" )
+                self.__load_display ( ii )
                 return
 
         # Build an H-panel full of navigation controls
@@ -82,6 +106,14 @@ class Display ( wx.Panel ) :
             b.Bind ( wx.EVT_BUTTON, self.onNav )
             sz.Add ( b, 0, wx.EXPAND )
 
+            # Size is in pixels, not characters
+            self.find = wx.TextCtrl ( pan, size=(100, -1))
+            sz.Add ( self.find, 0, wx.EXPAND )
+
+            b = wx.Button ( pan, wx.ID_ANY, "Find")
+            b.Bind ( wx.EVT_BUTTON, self.onNav )
+            sz.Add ( b, 0, wx.EXPAND )
+
             return pan
 
         def __load_display ( self, start ) :
@@ -102,6 +134,17 @@ class Display ( wx.Panel ) :
                 self.buttons[ii].SetLabel ( m[m_MYID] )
                 ii += 1
 
+        def Pop_micro ( self, my_id ) :
+            m = self.__lookup_id ( my_id )
+            if m == None :
+                return
+            # or, we could keep the existing frame and just
+            # change the contents
+            if self.preview :
+                self.preview.destroy ()
+            self.preview = Preview_Frame ( self, m )
+            self.preview.Show ( True )
+
         # The "dir" function shows all methods available
         # for an object.
         def onButton ( self, event ) :
@@ -112,6 +155,7 @@ class Display ( wx.Panel ) :
             #print ( dir(obj) )
             #print ( obj.GetLabel() )
             print ( "button was pushed for: ", obj.GetLabel() )
+            self.Pop_micro ( obj.GetLabel() )
 
         # The idea here is to set up an array of labels and buttons once and
         # for all, and then change their contents as the display changes.
@@ -171,5 +215,28 @@ class Display ( wx.Panel ) :
             # rv += ll.ljust ( nfill ) + "_"
             rv += "  " + loc
             return rv
+
+class Preview_Frame ( wx.Frame ) :
+
+        def __init__ ( self, parent, mm ):
+            title = "One mount"
+            psize = ( 600, 600 )
+            wx.Frame.__init__(self, None, wx.ID_ANY, title, size=psize )
+            #top = wx.Frame.__init__(self, None, wx.ID_ANY, title, pos=(a,b), size=wsize )
+
+            pan = wx.Panel ( self, -1 )
+            s = wx.BoxSizer ( wx.VERTICAL )
+            pan.SetSizer ( s )
+
+            t = EZtext ( pan, s, mm[m_MYID] )
+            #t.SetFont ( xxx_font )
+
+            path = "label_preview.png"
+            png = wx.Image ( path, wx.BITMAP_TYPE_ANY).ConvertToBitmap()
+            prev = wx.StaticBitmap ( pan, -1, png, (10, 5), (png.GetWidth(), png.GetHeight()))
+            s.Add ( prev, 0, wx.EXPAND )
+
+            # Display is a panel that fills this frame
+            #self.dd = Display ( self, db, max_lines )
 
 # THE END
