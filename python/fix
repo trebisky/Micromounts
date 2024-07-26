@@ -14,36 +14,38 @@ import os
 from Micros import Micros
 #from Labels import Labelsheet
 
-if len(sys.argv) > 1 :
-    id = sys.argv[1]
-else :
-    id = "08-149"
+#if len(sys.argv) > 1 :
+#    id = sys.argv[1]
+#else :
+#    id = "08-149"
 
 m = Micros ()
-#m.get_all ()
 
 # This returns a tuple
-mt = m.lookup ( id )
-ml = list ( mt )
+#mt = m.lookup ( id )
+#ml = list ( mt )
 
-my_id = ml[0]
+fix_id = 274
+my_hash = {}
+my_hash['myid'] = "08-144"
+m.update ( fix_id, my_hash )
 
-# ml[3] = "Vanadinite"
-# ml[4] = "Los Lamentos, Chihuahua, Mexico"
+fix_id = 279
+
 my_hash = {}
 my_hash['associations'] = "Vanadinite"
 my_hash['location'] = "Los Lamentos, Chihuahua, Mexico"
+m.update ( fix_id, my_hash )
 
-m.update ( my_id, my_hash )
 m.close ()
 
-mm = tuple ( ml )
-
-print ( type(ml) )
-print ( mm )
-
-for i in range ( len(mm) ) :
-    print ( i, " >", mm[i] )
+#mm = tuple ( ml )
+#
+#print ( type(ml) )
+#print ( mm )
+#
+#for i in range ( len(mm) ) :
+#    print ( i, " >", mm[i] )
 
 
     # schema gives:

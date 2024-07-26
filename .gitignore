@@ -13,6 +13,7 @@ box*
 zzz
 *.BAK
 *.OLD
+*.swp
 Misc
 Misc/*
 pymin

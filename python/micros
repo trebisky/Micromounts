@@ -1,0 +1,55 @@
+#!/bin/python3
+
+# micros
+#
+# Tom Trebisky  7-25-2024
+# 
+# Here it is!  My micromount database GUI written
+# in Python using wxWidgets
+
+import wx
+# import sys
+# import os
+
+xsize = 800
+ysize = 600
+wsize = ( xsize, ysize )
+
+# This seems to fit fine in a display of the above size
+# with a 12 point fixed width font
+max_lines = 20
+
+from Micros import *
+from Display import *
+
+class Micros_Frame (wx.Frame):
+
+        def __init__ ( self, parent, title, db ):
+            wx.Frame.__init__(self, None, wx.ID_ANY, title, size=wsize )
+            #top = wx.Frame.__init__(self, None, wx.ID_ANY, title, pos=(a,b), size=wsize )
+
+            self.db = db
+            data = db.all ()
+
+            # Display is a panel that fills this frame
+            self.dd = Display ( self, db, max_lines )
+
+
+class Micros_GUI ( wx.App ):
+        def __init__ ( self ) :
+            wx.App.__init__(self)
+
+# -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+
+db = Micros ()
+
+app = Micros_GUI ()
+
+frame = Micros_Frame ( None, "Micromount database", db )
+app.SetTopWindow ( frame )
+frame.Show ( True )
+
+app.MainLoop()
+
+# THE END

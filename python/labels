@@ -30,7 +30,9 @@ else :
 #    print ( x )
 
 m = Micros ()
-#m.get_all ()
+
+#m.validate ()
+#exit ()
 
 #mm = m.lookup ( id )
 #print ( mm )

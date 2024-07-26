@@ -1,9 +1,39 @@
 #!/bin/python3
 
+# Micros.py
+# database access for the micromount database
+
+# Tom Trebisky  7-25-2024
+
 import os
 import sqlite3
 
 ##micro_db = "minerals.sqlite3"
+
+# I am double minded.  We could always convert to a hash and
+# reference fields by name in that way, or we can leave the row
+# data in a tuple and use these indices.
+#
+# Never mind what they say, the only sane way to deal with this is
+# to use "from Micros import *" in each file that needs this.
+# I have no remorse.  I am the only one who will use this, AND
+# there is a small and well known set of items that will get
+# imported.
+m_ID = 0
+m_MYID = 1
+m_SPECIES = 2
+m_ASSOCIATIONS = 3
+m_ASS = 3
+m_LOCATION = 4
+m_LOC = 4
+m_NOTES = 5
+m_ORIGIN = 6
+m_SOURCE = 7
+m_OWNER = 8
+m_STATUS = 9
+m_LABEL = 10
+m_CREATED = 11
+m_UPDATED = 12
 
 # Convert array to hash.
 # A more general way would use the schema for this.
@@ -49,18 +79,34 @@ class Micros :
         except OSError as e:
             print(e)
 
-        self.get_all ()
+        self.__get_all ()
         print ( f"{len(self.rows)} entries in database"  )
 
-    def get_all ( self ) :
+    def __get_all ( self ) :
         cur = self.conn.cursor ()
         cur.execute ( "SELECT * from mounts" )
         self.rows = cur.fetchall ()
         cur.close ()
 
-    # Someday this may do more that get_all()
+    def all ( self ) :
+        return self.rows
+
+    # A one time check.
+    # look for duplicate values among myid
+    def validate ( self ) :
+        for x in self.rows :
+            count = 0
+            for y in self.rows :
+                if x[1] == y[1] :
+                    count += 1
+                    if count > 1 :
+                        print ( "Dup: ", x[1] )
+                        print ( x )
+                        print ( y )
+
+    # Someday this may do more that __get_all()
     def refresh ( self ) :
-        self.get_all ()
+        self.__get_all ()
 
     # The idea here is to find out where this script is running
     # in order to generate an absolute path to find the database

@@ -1,0 +1,36 @@
+#!/bin/python3
+
+# stats
+#
+# This is a command line tool to give me statistics
+# from my micromount database.
+#
+# Tom Trebisky  7-23-2024
+
+import sys
+import os
+
+#import Micros
+#from Micros import Micros
+from Micros import *
+
+#if len(sys.argv) <= 1 :
+#    id_list.append ( "08-149" )
+#else :
+#    for id in sys.argv[1:] :
+#        id_list.append ( id )
+
+#for x in id_list :
+#    print ( x )
+
+m = Micros ()
+
+id = "08-168"
+mm = m.lookup ( id )
+print ( mm )
+#print ( mm[Micros.m_MYID] )
+print ( mm[m_MYID] )
+
+m.close ()
+
+# THE END
