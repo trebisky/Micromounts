@@ -12,6 +12,7 @@ import re
 
 from Micros import *
 from Text import *
+from Labels import *
 
 class Display ( wx.Panel ) :
 
@@ -22,6 +23,7 @@ class Display ( wx.Panel ) :
             self.n_lines = n_lines
 
             self.preview = None
+            self.labelmaker = Labelsheet ()
 
             self.data = self.db.all ()
             self.n_data = len ( self.data )
@@ -80,6 +82,7 @@ class Display ( wx.Panel ) :
                 ii = self.__lookup_I ( xx )
                 if ii == None :
                     print ( xx, " not found" )
+                    return
                 self.__load_display ( ii )
                 return
 
@@ -142,7 +145,7 @@ class Display ( wx.Panel ) :
             # change the contents
             if self.preview :
                 self.preview.destroy ()
-            self.preview = Preview_Frame ( self, m )
+            self.preview = Preview_Frame ( self, m, self.labelmaker )
             self.preview.Show ( True )
 
         # The "dir" function shows all methods available
@@ -218,7 +221,7 @@ class Display ( wx.Panel ) :
 
 class Preview_Frame ( wx.Frame ) :
 
-        def __init__ ( self, parent, mm ):
+        def __init__ ( self, parent, mm, ll ):
             title = "One mount"
             psize = ( 600, 600 )
             wx.Frame.__init__(self, None, wx.ID_ANY, title, size=psize )
@@ -231,8 +234,9 @@ class Preview_Frame ( wx.Frame ) :
             t = EZtext ( pan, s, mm[m_MYID] )
             #t.SetFont ( xxx_font )
 
-            path = "label_preview.png"
-            png = wx.Image ( path, wx.BITMAP_TYPE_ANY).ConvertToBitmap()
+            p_path = ll.preview ( mm )
+            #path = "label_preview.png"
+            png = wx.Image ( p_path, wx.BITMAP_TYPE_ANY).ConvertToBitmap()
             prev = wx.StaticBitmap ( pan, -1, png, (10, 5), (png.GetWidth(), png.GetHeight()))
             s.Add ( prev, 0, wx.EXPAND )
 

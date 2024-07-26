@@ -22,8 +22,10 @@ wsize = ( xsize, ysize )
 # with a 12 point fixed width font
 max_lines = 20
 
-from Micros import *
+# The order of these is important since Display also
+# has an import in it.
 from Display import *
+from Micros import *
 
 class Micros_Frame (wx.Frame):
 
@@ -36,7 +38,6 @@ class Micros_Frame (wx.Frame):
 
             # Display is a panel that fills this frame
             self.dd = Display ( self, db, max_lines )
-
 
 class Micros_GUI ( wx.App ):
         def __init__ ( self ) :
