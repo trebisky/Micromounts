@@ -11,8 +11,11 @@ import wx
 # import sys
 # import os
 
+# The ysize needs to be tuned by trial and error
+# to hold the "max_lines" number of lines
 xsize = 800
-ysize = 600
+#ysize = 600
+ysize = 750
 wsize = ( xsize, ysize )
 
 # This seems to fit fine in a display of the above size

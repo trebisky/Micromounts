@@ -20,7 +20,10 @@ class Display ( wx.Panel ) :
 
             self.db = db
             self.n_lines = n_lines
+
             self.data = self.db.all ()
+            self.n_data = len ( self.data )
+            self.cur = None
 
             s = wx.BoxSizer ( wx.VERTICAL )
             self.SetSizer ( s )
@@ -31,11 +34,30 @@ class Display ( wx.Panel ) :
             s.Add ( d, 0, wx.EXPAND )
 
             #self.__load_display ( 0 )
-            self.__load_display ( 1270 )
+            #self.__load_display ( 1270 )
+            self.__load_display ( self.n_data - self.n_lines )
 
         def onNav ( self, event ) :
             obj = event.GetEventObject()
-            print ( "NAV button was pushed for: ", obj.GetLabel() )
+            action = obj.GetLabel()
+            print ( "NAV button was pushed for: ", action )
+
+            if action == "Next" :
+                start = self.cur + self.n_lines
+                if start < self.n_data :
+                    self.__load_display ( start )
+                return
+            if action == "Prev" :
+                start = self.cur - self.n_lines
+                if start >= 0 :
+                    self.__load_display ( start )
+                return
+            if action == "Start" :
+                self.__load_display ( 0 )
+                return
+            if action == "End" :
+                self.__load_display ( self.n_data - self.n_lines )
+                return
 
         # Build an H-panel full of navigation controls
         def __build_nav ( self ) :
@@ -44,26 +66,37 @@ class Display ( wx.Panel ) :
             sz = wx.BoxSizer ( wx.HORIZONTAL )
             pan.SetSizer ( sz )
 
-            b = wx.Button ( pan, wx.ID_ANY, "Go")
+            b = wx.Button ( pan, wx.ID_ANY, "Start")
             b.Bind ( wx.EVT_BUTTON, self.onNav )
             sz.Add ( b, 0, wx.EXPAND )
 
-            b = wx.Button ( pan, wx.ID_ANY, "Stop")
+            b = wx.Button ( pan, wx.ID_ANY, "Prev")
+            b.Bind ( wx.EVT_BUTTON, self.onNav )
+            sz.Add ( b, 0, wx.EXPAND )
+
+            b = wx.Button ( pan, wx.ID_ANY, "Next")
+            b.Bind ( wx.EVT_BUTTON, self.onNav )
+            sz.Add ( b, 0, wx.EXPAND )
+
+            b = wx.Button ( pan, wx.ID_ANY, "End")
             b.Bind ( wx.EVT_BUTTON, self.onNav )
             sz.Add ( b, 0, wx.EXPAND )
 
             return pan
 
         def __load_display ( self, start ) :
+            self.cur = start
             for ll in self.labels :
                 ll.SetLabel ( "" )
+            for bb in self.buttons :
+                bb.SetLabel ( "--" )
             # This works fine at the end of data when the
             # slice has less than n_lines
-            #slice = self.data[start:end]
-            #print ( "Slice: ", len(slice) )
             ii = 0
             end = start + self.n_lines
-            for m in self.data[start:end] :
+            slice = self.data[start:end]
+            #print ( "Slice: ", len(slice) )
+            for m in slice :
                 label = self.mk_desc ( m )
                 self.labels[ii].SetLabel ( label )
                 self.buttons[ii].SetLabel ( m[m_MYID] )
