@@ -198,7 +198,7 @@ class Micros :
     def lookup_i ( self, id ) :
         n = len ( self.rows )
         for i in range(n) :
-            if self.rows[i][1] == id :
+            if self.rows[i][m_MYID] == id :
                 #print ( "found: ", self.rows[i] )
                 return i
         return None

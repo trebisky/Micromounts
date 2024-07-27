@@ -1,36 +1,51 @@
 #!/bin/python3
 
-# stats
+# count
 #
 # This is a command line tool to give me statistics
 # from my micromount database.
+# In particular, a count of how many of each species I have.
 #
-# Tom Trebisky  7-23-2024
+# run the result through sort:
+#
+#  ./count | sort -rn | head -20
+#
+# Tom Trebisky  7-26-2024
 
 import sys
 import os
+import re
 
-#import Micros
-#from Micros import Micros
 from Micros import *
 
-#if len(sys.argv) <= 1 :
-#    id_list.append ( "08-149" )
-#else :
-#    for id in sys.argv[1:] :
-#        id_list.append ( id )
+mdb = Micros ()
+data = mdb.all()
+mdb.close ()
 
-#for x in id_list :
-#    print ( x )
+counts = {}
+for m in data :
+    species = m[m_SPECIES]
+    species = re.sub ( r'^\s*', '', species )
+    species = re.sub ( r'\s+.*', '', species )
+    # print ( species )
+    sw = species.split ()
+    if len(sw) > 1 :
+        print ( "Trouble: ", species )
+    if species in counts :
+        counts[species] += 1
+    else:
+        counts[species] = 1
 
-m = Micros ()
+print ( len(data), " mounts" )
+print ( len(counts), " species" )
 
-id = "08-168"
-mm = m.lookup ( id )
-print ( mm )
-#print ( mm[Micros.m_MYID] )
-print ( mm[m_MYID] )
+tmp = "zzz"
+os.system ( f"rm -f {tmp}" )
+with open ( tmp, "w" ) as f:
+    for s in counts :
+        f.write ( f"{counts[s]} {s}\n" )
 
-m.close ()
+os.system ( f"sort -rn {tmp} | head -20" )
+os.system ( f"rm -f {tmp}" )
 
 # THE END

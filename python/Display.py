@@ -138,14 +138,15 @@ class Display ( wx.Panel ) :
                 ii += 1
 
         def Pop_micro ( self, my_id ) :
-            m = self.__lookup_id ( my_id )
-            if m == None :
+            index = self.__lookup_I ( my_id )
+            if index == None :
                 return
             # or, we could keep the existing frame and just
             # change the contents
             if self.preview :
                 self.preview.destroy ()
-            self.preview = Preview_Frame ( self, m, self.labelmaker )
+
+            self.preview = Preview_Frame ( self, self.data, index, self.labelmaker )
             self.preview.Show ( True )
 
         # The "dir" function shows all methods available
@@ -221,26 +222,85 @@ class Display ( wx.Panel ) :
 
 class Preview_Frame ( wx.Frame ) :
 
-        def __init__ ( self, parent, mm, ll ):
+        def __init__ ( self, parent, data, index, ll ):
             title = "One mount"
             psize = ( 600, 600 )
+
             wx.Frame.__init__(self, None, wx.ID_ANY, title, size=psize )
             #top = wx.Frame.__init__(self, None, wx.ID_ANY, title, pos=(a,b), size=wsize )
+
+            self.labelmaker = ll
+            self.data = data
+            self.n_data = len(data)
+            self.index = None
 
             pan = wx.Panel ( self, -1 )
             s = wx.BoxSizer ( wx.VERTICAL )
             pan.SetSizer ( s )
 
-            t = EZtext ( pan, s, mm[m_MYID] )
-            #t.SetFont ( xxx_font )
+            nav = self.__build_nav ( pan )
+            s.Add ( nav, 0, wx.EXPAND )
 
-            p_path = ll.preview ( mm )
+            # Setup empty framework
+
+            bogus = "-- bogus"
+            self.l1 = EZtext ( pan, s, bogus )
+            #t.SetFont ( xxx_font )
+            self.l2 = EZtext ( pan, s, bogus )
+            self.l3 = EZtext ( pan, s, bogus )
+            self.l4 = EZtext ( pan, s, bogus )
+
+            #prev = wx.StaticBitmap ( pan, -1, png, (10, 5), (png.GetWidth(), png.GetHeight()))
+            prev = wx.StaticBitmap ( pan, -1 )
+            s.Add ( prev, 0, wx.EXPAND )
+            self.bitmap = prev
+
+            # fill with data
+            self.refresh ( index )
+
+        def refresh ( self, index ) :
+            self.index = index
+            mm = self.data[self.index]
+
+            #msg = "My ID = " + mm[m_MYID] + "     database ID = " + mm[m_ID]
+            msg = f"My ID = {mm[m_MYID]}      database ID = {mm[m_ID]}"
+            self.l1.SetLabel ( msg )
+            self.l2.SetLabel ( mm[m_SPECIES] )
+            self.l3.SetLabel ( mm[m_ASS] )
+            self.l4.SetLabel ( mm[m_LOC] )
+
+            p_path = self.labelmaker.preview ( mm )
             #path = "label_preview.png"
             png = wx.Image ( p_path, wx.BITMAP_TYPE_ANY).ConvertToBitmap()
-            prev = wx.StaticBitmap ( pan, -1, png, (10, 5), (png.GetWidth(), png.GetHeight()))
-            s.Add ( prev, 0, wx.EXPAND )
+            self.bitmap.SetBitmap ( png )
 
-            # Display is a panel that fills this frame
-            #self.dd = Display ( self, db, max_lines )
+        def __onNav ( self, event ) :
+            obj = event.GetEventObject()
+            action = obj.GetLabel()
+            print ( "NAV2 button was pushed for: ", action )
+
+            if action == "Next" :
+                if self.index + 1 < self.n_data :
+                    self.refresh ( self.index + 1)
+                return
+            if action == "Prev" :
+                if self.index > 0 :
+                    self.refresh ( self.index - 1)
+                return
+
+        def __build_nav ( self, pp ) :
+            pan = wx.Panel ( pp, -1 )
+            sz = wx.BoxSizer ( wx.HORIZONTAL )
+            pan.SetSizer ( sz )
+
+            b = wx.Button ( pan, wx.ID_ANY, "Prev")
+            b.Bind ( wx.EVT_BUTTON, self.__onNav )
+            sz.Add ( b, 0, wx.EXPAND )
+
+            b = wx.Button ( pan, wx.ID_ANY, "Next")
+            b.Bind ( wx.EVT_BUTTON, self.__onNav )
+            sz.Add ( b, 0, wx.EXPAND )
+
+            return pan
 
 # THE END
