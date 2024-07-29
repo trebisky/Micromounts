@@ -29,6 +29,11 @@ class Display ( wx.Panel ) :
             self.n_data = len ( self.data )
             self.cur = None
 
+            self.search_data = []
+            self.n_search = 0
+            self.show_search = False
+            self.cur_search = None
+
             s = wx.BoxSizer ( wx.VERTICAL )
             self.SetSizer ( s )
 
@@ -61,12 +66,20 @@ class Display ( wx.Panel ) :
             print ( "NAV button was pushed for: ", action )
 
             if action == "Next" :
-                start = self.cur + self.n_lines
-                if start < self.n_data :
-                    self.__load_display ( start )
+                if self.show_search :
+                    start = self.cur_search + self.n_lines
+                    if start < self.n_search :
+                        self.__load_display ( start )
+                else :
+                    start = self.cur + self.n_lines
+                    if start < self.n_data :
+                        self.__load_display ( start )
                 return
             if action == "Prev" :
-                start = self.cur - self.n_lines
+                if self.show_search :
+                    start = self.cur_search - self.n_lines
+                else :
+                    start = self.cur - self.n_lines
                 if start >= 0 :
                     self.__load_display ( start )
                 return
@@ -74,7 +87,13 @@ class Display ( wx.Panel ) :
                 self.__load_display ( 0 )
                 return
             if action == "End" :
-                self.__load_display ( self.n_data - self.n_lines )
+                if self.show_search :
+                    start = self.n_search - self.n_lines
+                else :
+                    start = self.n_data - self.n_lines
+                if start < 0 :
+                    start = 0
+                self.__load_display ( start )
                 return
             if action == "Find" :
                 xx = self.find.GetValue()
@@ -84,6 +103,21 @@ class Display ( wx.Panel ) :
                     print ( xx, " not found" )
                     return
                 self.__load_display ( ii )
+                return
+            if action == "Search" :
+                search = Search_Frame ( self )
+                search.Show ( True )
+                return
+            # This is a toggle
+            # XXX - we also want to change button color
+            if action == "All" :
+                if self.show_search :
+                    self.show_search = False
+                    self.__load_display ( self.cur )
+                else :
+                    if self.n_search > 0 :
+                        self.show_search = True
+                        self.__load_display ( self.cur_search )
                 return
 
         # Build an H-panel full of navigation controls
@@ -117,20 +151,72 @@ class Display ( wx.Panel ) :
             b.Bind ( wx.EVT_BUTTON, self.onNav )
             sz.Add ( b, 0, wx.EXPAND )
 
+            b = wx.Button ( pan, wx.ID_ANY, "Search")
+            b.Bind ( wx.EVT_BUTTON, self.onNav )
+            sz.Add ( b, 0, wx.EXPAND )
+
+            b = wx.Button ( pan, wx.ID_ANY, "All")
+            b.Bind ( wx.EVT_BUTTON, self.onNav )
+            sz.Add ( b, 0, wx.EXPAND )
+
             return pan
 
+        # Handle the callback from the Search dialog
+        # This keeps the full dataset and the search results
+        # both here in this Display object
+        #
+        # Our species field is cluttered with whitespace,
+        # so we do a substring test.  Alternately we
+        # could call "__tidy()" to trim all the whitespace
+        # The latter avoids some bogus matches
+        # TODO -- Handle associations
+        def do_search ( self, species, assoc, loc, what ) :
+            self.search_data = []
+            if species :
+                what = what.capitalize ()
+                #print ( "Searching for ", what )
+                for m in self.data :
+                    if what == self.__tidy ( m[m_SPECIES] ) :
+                        self.search_data.append ( m )
+            else:
+                print ( "Searching for loc ", what )
+                for m in self.data :
+                    if what in m[m_LOC] :
+                        self.search_data.append ( m )
+
+            self.n_search = len ( self.search_data )
+            print ( "Found ", self.n_search, " items" )
+            # XXX this may be confusing -- if the search fals,
+            # we just go back to the full display
+            if self.n_search > 0 :
+                self.show_search = True
+                self.__load_display ( 0 )
+            else :
+                self.show_search = False
+                self.__load_display ( self.cur )
+            return
+
         def __load_display ( self, start ) :
-            self.cur = start
+
+            # Clear it all out -- usually not needed,
+            #  but this guarantees a clean slate
             for ll in self.labels :
                 ll.SetLabel ( "" )
             for bb in self.buttons :
                 bb.SetLabel ( "--" )
-            # This works fine at the end of data when the
-            # slice has less than n_lines
+
+            if self.show_search :
+                self.cur_search = start
+                end = start + self.n_lines
+                slice = self.search_data[start:end]
+            else :
+                # This works fine at the end of data when the
+                # slice has less than n_lines
+                self.cur = start
+                end = start + self.n_lines
+                slice = self.data[start:end]
+
             ii = 0
-            end = start + self.n_lines
-            slice = self.data[start:end]
-            #print ( "Slice: ", len(slice) )
             for m in slice :
                 label = self.mk_desc ( m )
                 self.labels[ii].SetLabel ( label )
@@ -219,6 +305,65 @@ class Display ( wx.Panel ) :
             # rv += ll.ljust ( nfill ) + "_"
             rv += "  " + loc
             return rv
+
+class Search_Frame ( wx.Frame ) :
+
+        def __init__ ( self, parent ):
+            title = "Search"
+            psize = ( 600, 600 )
+
+            # This happens to be the parent, and we will need to call back
+            # to actually do the search
+            self.display = parent
+
+            wx.Frame.__init__(self, None, wx.ID_ANY, title, size=psize )
+
+            pan = wx.Panel ( self, -1 )
+            sz = wx.BoxSizer ( wx.VERTICAL )
+            pan.SetSizer ( sz )
+
+            # species line -- 
+            pan2 = wx.Panel ( pan, -1 )
+            sz2 = wx.BoxSizer ( wx.HORIZONTAL )
+            pan2.SetSizer ( sz2 )
+
+            # Size is in pixels, not characters
+            self.find_species = wx.TextCtrl ( pan2, size=(100, -1))
+            sz2.Add ( self.find_species, 1, wx.EXPAND )
+
+            b = wx.Button ( pan2, wx.ID_ANY, "Species")
+            b.Bind ( wx.EVT_BUTTON, self.onButton )
+            sz2.Add ( b, 0, wx.EXPAND )
+
+            # location line -- 
+            pan3 = wx.Panel ( pan, -1 )
+            sz2 = wx.BoxSizer ( wx.HORIZONTAL )
+            pan3.SetSizer ( sz2 )
+
+            # Size is in pixels, not characters
+            self.find_loc = wx.TextCtrl ( pan3, size=(100, -1))
+            sz2.Add ( self.find_loc, 1, wx.EXPAND )
+
+            b = wx.Button ( pan3, wx.ID_ANY, "Location")
+            b.Bind ( wx.EVT_BUTTON, self.onButton )
+            sz2.Add ( b, 0, wx.EXPAND )
+
+            sz.Add ( pan2, 0, wx.EXPAND )
+            sz.Add ( pan3, 0, wx.EXPAND )
+
+        def onButton ( self, event ) :
+            obj = event.GetEventObject()
+            action = obj.GetLabel()
+            if action == "Species" :
+                xx = self.find_species.GetValue()
+                print ( "Look for species: ", xx )
+                self.display.do_search ( True, False, False, xx )
+            if action == "Location" :
+                xx = self.find_loc.GetValue()
+                print ( "Look for location: ", xx )
+                self.display.do_search ( False, False, True, xx )
+            #self.Destroy ()
+            self.Close ()
 
 class Preview_Frame ( wx.Frame ) :
 
