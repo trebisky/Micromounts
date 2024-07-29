@@ -159,6 +159,8 @@ class Display ( wx.Panel ) :
             b.Bind ( wx.EVT_BUTTON, self.onNav )
             sz.Add ( b, 0, wx.EXPAND )
 
+            self.status = EZtext ( pan, sz, "" )
+
             return pan
 
         # Handle the callback from the Search dialog
@@ -181,13 +183,18 @@ class Display ( wx.Panel ) :
             else:
                 print ( "Searching for loc ", what )
                 for m in self.data :
-                    if what in m[m_LOC] :
+                    #if what in m[m_LOC] :
+                    # The following makes things case invariant
+                    if what.casefold() in m[m_LOC].casefold() :
                         self.search_data.append ( m )
 
             self.n_search = len ( self.search_data )
             print ( "Found ", self.n_search, " items" )
             # XXX this may be confusing -- if the search fals,
             # we just go back to the full display
+            # show match count on main display
+            stat = f"{self.n_search} found"
+            self.status.SetLabel ( stat )
             if self.n_search > 0 :
                 self.show_search = True
                 self.__load_display ( 0 )
