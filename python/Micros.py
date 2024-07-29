@@ -68,7 +68,7 @@ class Micros :
         self.rows = []
 
         self.mypath = Micros.grog_path ()
-        print ( "Running from: ", self.mypath )
+        #print ( "Running from: ", self.mypath )
 
         db_path = self.mypath + "/" + "minerals.sqlite3"
 
@@ -80,7 +80,7 @@ class Micros :
             print(e)
 
         self.__get_all ()
-        print ( f"{len(self.rows)} entries in database"  )
+        #print ( f"{len(self.rows)} entries in database"  )
 
     def __get_all ( self ) :
         cur = self.conn.cursor ()
@@ -117,7 +117,7 @@ class Micros :
     def grog_path ( cls ) :
         my_path = os.path.realpath ( __file__ )
         (path, file) = os.path.split ( my_path )
-        print ( path )
+        #print ( path )
         return path
 
 

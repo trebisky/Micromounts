@@ -112,11 +112,11 @@ class Display ( wx.Panel ) :
             # XXX - we also want to change button color
             if action == "All" :
                 if self.show_search :
-                    self.show_search = False
+                    self.__show_search ( False )
                     self.__load_display ( self.cur )
                 else :
                     if self.n_search > 0 :
-                        self.show_search = True
+                        self.__show_search ( True )
                         self.__load_display ( self.cur_search )
                 return
 
@@ -143,6 +143,8 @@ class Display ( wx.Panel ) :
             b.Bind ( wx.EVT_BUTTON, self.onNav )
             sz.Add ( b, 0, wx.EXPAND )
 
+            sz.AddSpacer(20)
+
             # Size is in pixels, not characters
             self.find = wx.TextCtrl ( pan, size=(100, -1))
             sz.Add ( self.find, 0, wx.EXPAND )
@@ -151,6 +153,8 @@ class Display ( wx.Panel ) :
             b.Bind ( wx.EVT_BUTTON, self.onNav )
             sz.Add ( b, 0, wx.EXPAND )
 
+            sz.AddSpacer(20)
+
             b = wx.Button ( pan, wx.ID_ANY, "Search")
             b.Bind ( wx.EVT_BUTTON, self.onNav )
             sz.Add ( b, 0, wx.EXPAND )
@@ -158,10 +162,47 @@ class Display ( wx.Panel ) :
             b = wx.Button ( pan, wx.ID_ANY, "All")
             b.Bind ( wx.EVT_BUTTON, self.onNav )
             sz.Add ( b, 0, wx.EXPAND )
+            self.all_button = b
 
-            self.status = EZtext ( pan, sz, "" )
+            sz.AddStretchSpacer()
+
+            msg = f"{self.n_data} mounts"
+            self.status = EZtext ( pan, sz, msg )
 
             return pan
+
+        # May also watch for words like "in" and "with"
+        def __check_with_assoc ( self, m, what ) :
+            if what == self.__tidy ( m[m_SPECIES] ) :
+                return True
+
+            if what.casefold() in m[m_ASS].casefold() :
+                return True
+
+            # The idea here is to avoid some false matches
+            # by splitting into exact species names,
+            # but there are many complications, such as the
+            # words "in" and "width" and quoted slang names.
+            # so just using the above and allowing a few false
+            # matches is the best thing.
+            #
+            # ass_list = re.split ( r',\s*', m[m_ASS] )
+            # print ( ass_list )
+            # for a in ass_list :
+            #     if what == a :
+            #         return True
+            return False
+
+        # This centralizes transitions and allows
+        # the button color to be changed.
+        def __show_search ( self, val ) :
+            self.show_search = val
+            if val == True :
+                yellow = wx.Colour ( 255, 255, 33 )
+                self.all_button.SetBackgroundColour ( yellow )
+            else :
+                white = wx.Colour ( 255, 255, 255 )
+                self.all_button.SetBackgroundColour ( white )
 
         # Handle the callback from the Search dialog
         # This keeps the full dataset and the search results
@@ -176,12 +217,17 @@ class Display ( wx.Panel ) :
             self.search_data = []
             if species :
                 what = what.capitalize ()
-                #print ( "Searching for ", what )
-                for m in self.data :
-                    if what == self.__tidy ( m[m_SPECIES] ) :
-                        self.search_data.append ( m )
+                #print ( "Searching for sp ", what )
+                if assoc :
+                    for m in self.data :
+                        if self.__check_with_assoc ( m, what ) :
+                            self.search_data.append ( m )
+                else :
+                    for m in self.data :
+                        if what == self.__tidy ( m[m_SPECIES] ) :
+                            self.search_data.append ( m )
             else:
-                print ( "Searching for loc ", what )
+                #print ( "Searching for loc ", what )
                 for m in self.data :
                     #if what in m[m_LOC] :
                     # The following makes things case invariant
@@ -189,17 +235,17 @@ class Display ( wx.Panel ) :
                         self.search_data.append ( m )
 
             self.n_search = len ( self.search_data )
-            print ( "Found ", self.n_search, " items" )
+            #print ( "Found ", self.n_search, " items" )
             # XXX this may be confusing -- if the search fals,
             # we just go back to the full display
             # show match count on main display
             stat = f"{self.n_search} found"
             self.status.SetLabel ( stat )
             if self.n_search > 0 :
-                self.show_search = True
+                self.__show_search ( True )
                 self.__load_display ( 0 )
             else :
-                self.show_search = False
+                self.__show_search ( False )
                 self.__load_display ( self.cur )
             return
 
@@ -235,9 +281,10 @@ class Display ( wx.Panel ) :
             if index == None :
                 return
             # or, we could keep the existing frame and just
-            # change the contents
+            # change the contents (and hide it as needed)
             if self.preview :
-                self.preview.destroy ()
+                #self.preview.Destroy ()
+                self.preview.Close ()
 
             self.preview = Preview_Frame ( self, self.data, index, self.labelmaker )
             self.preview.Show ( True )
@@ -251,7 +298,7 @@ class Display ( wx.Panel ) :
             #print ( obj )
             #print ( dir(obj) )
             #print ( obj.GetLabel() )
-            print ( "button was pushed for: ", obj.GetLabel() )
+            #print ( "button was pushed for: ", obj.GetLabel() )
             self.Pop_micro ( obj.GetLabel() )
 
         # The idea here is to set up an array of labels and buttons once and
@@ -317,7 +364,7 @@ class Search_Frame ( wx.Frame ) :
 
         def __init__ ( self, parent ):
             title = "Search"
-            psize = ( 600, 600 )
+            psize = ( 400, 200 )
 
             # This happens to be the parent, and we will need to call back
             # to actually do the search
@@ -342,6 +389,13 @@ class Search_Frame ( wx.Frame ) :
             b.Bind ( wx.EVT_BUTTON, self.onButton )
             sz2.Add ( b, 0, wx.EXPAND )
 
+            # Associations line --
+            #  A checkbox labels itself
+            pan22 = wx.Panel ( pan, -1 )
+            #sz22 = wx.BoxSizer ( wx.HORIZONTAL )
+            #pan22.SetSizer ( sz22 )
+            self.assoc = wx.CheckBox ( pan22, label = 'Associations' )
+
             # location line -- 
             pan3 = wx.Panel ( pan, -1 )
             sz2 = wx.BoxSizer ( wx.HORIZONTAL )
@@ -356,6 +410,7 @@ class Search_Frame ( wx.Frame ) :
             sz2.Add ( b, 0, wx.EXPAND )
 
             sz.Add ( pan2, 0, wx.EXPAND )
+            sz.Add ( pan22, 0, wx.EXPAND )
             sz.Add ( pan3, 0, wx.EXPAND )
 
         def onButton ( self, event ) :
@@ -363,8 +418,10 @@ class Search_Frame ( wx.Frame ) :
             action = obj.GetLabel()
             if action == "Species" :
                 xx = self.find_species.GetValue()
-                print ( "Look for species: ", xx )
-                self.display.do_search ( True, False, False, xx )
+                ass = self.assoc.GetValue ()
+                #print ( "Look for species: ", xx )
+                #print ( "Assoc: ", ass )
+                self.display.do_search ( True, ass, False, xx )
             if action == "Location" :
                 xx = self.find_loc.GetValue()
                 print ( "Look for location: ", xx )
@@ -375,8 +432,8 @@ class Search_Frame ( wx.Frame ) :
 class Preview_Frame ( wx.Frame ) :
 
         def __init__ ( self, parent, data, index, ll ):
-            title = "One mount"
-            psize = ( 600, 600 )
+            title = "Mount"
+            psize = ( 800, 600 )
 
             wx.Frame.__init__(self, None, wx.ID_ANY, title, size=psize )
             #top = wx.Frame.__init__(self, None, wx.ID_ANY, title, pos=(a,b), size=wsize )
@@ -402,7 +459,21 @@ class Preview_Frame ( wx.Frame ) :
             self.l3 = EZtext ( pan, s, bogus )
             self.l4 = EZtext ( pan, s, bogus )
 
+            self.l5 = EZtext ( pan, s, bogus )
+            self.l6 = EZtext ( pan, s, bogus )
+            self.l7 = EZtext ( pan, s, bogus )
+            self.l8 = EZtext ( pan, s, bogus )
+
+            self.lc = EZtext ( pan, s, bogus )
+            self.lu = EZtext ( pan, s, bogus )
+
+            # notes
+            self.l9 = EZtext ( pan, s, bogus )
+
+            s.AddStretchSpacer()
+
             #prev = wx.StaticBitmap ( pan, -1, png, (10, 5), (png.GetWidth(), png.GetHeight()))
+            # This ends up 291 by 290 pixels
             prev = wx.StaticBitmap ( pan, -1 )
             s.Add ( prev, 0, wx.EXPAND )
             self.bitmap = prev
@@ -417,9 +488,33 @@ class Preview_Frame ( wx.Frame ) :
             #msg = "My ID = " + mm[m_MYID] + "     database ID = " + mm[m_ID]
             msg = f"My ID = {mm[m_MYID]}      database ID = {mm[m_ID]}"
             self.l1.SetLabel ( msg )
-            self.l2.SetLabel ( mm[m_SPECIES] )
-            self.l3.SetLabel ( mm[m_ASS] )
-            self.l4.SetLabel ( mm[m_LOC] )
+            msg = f"Species: {mm[m_SPECIES]}"
+            self.l2.SetLabel ( msg )
+            msg = f"Associations: {mm[m_ASS]}"
+            self.l3.SetLabel ( msg )
+            msg = f"Location: {mm[m_LOC]}"
+            self.l4.SetLabel ( msg )
+
+            msg = f"Origin: {mm[m_ORIGIN]}"
+            self.l5.SetLabel ( msg )
+            msg = f"Source: {mm[m_SOURCE]}"
+            self.l6.SetLabel ( msg )
+            msg = f"Owner: {mm[m_OWNER]}"
+            self.l7.SetLabel ( msg )
+            msg = f"Status: {mm[m_STATUS]}"
+            self.l8.SetLabel ( msg )
+
+            msg = f"Created: {mm[m_CREATED]}"
+            self.lc.SetLabel ( msg )
+            msg = f"Updated: {mm[m_UPDATED]}"
+            self.lu.SetLabel ( msg )
+
+            # Put notes last so multiple lines have room
+            if mm[m_NOTES] == "" :
+                msg = f"Notes: -none-"
+            else :
+                msg = f"Notes: {mm[m_NOTES]}"
+            self.l9.SetLabel ( msg )
 
             p_path = self.labelmaker.preview ( mm )
             #path = "label_preview.png"
@@ -439,6 +534,8 @@ class Preview_Frame ( wx.Frame ) :
                 if self.index > 0 :
                     self.refresh ( self.index - 1)
                 return
+            if action == "Edit" :
+                return
 
         def __build_nav ( self, pp ) :
             pan = wx.Panel ( pp, -1 )
@@ -450,6 +547,13 @@ class Preview_Frame ( wx.Frame ) :
             sz.Add ( b, 0, wx.EXPAND )
 
             b = wx.Button ( pan, wx.ID_ANY, "Next")
+            b.Bind ( wx.EVT_BUTTON, self.__onNav )
+            sz.Add ( b, 0, wx.EXPAND )
+
+            sz.AddSpacer ( 50 )
+            #sz.AddStretchSpacer()
+
+            b = wx.Button ( pan, wx.ID_ANY, "Edit")
             b.Bind ( wx.EVT_BUTTON, self.__onNav )
             sz.Add ( b, 0, wx.EXPAND )
 

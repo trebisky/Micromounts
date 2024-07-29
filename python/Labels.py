@@ -32,7 +32,7 @@ class Labelsheet :
             # ID font size is 5 in boiler
 
         mypath = Micros.Micros.grog_path ()
-        print ( "LABELS grog = ", mypath )
+        #print ( "LABELS grog = ", mypath )
 
         if self.euro :
             self.boiler = mypath + "/" + 'boiler_euro.ps'
@@ -241,7 +241,7 @@ class Labelsheet :
         pstoimg = "/usr/bin/pstoimg -quiet -type png -crop a -antialias -aaliastext"
         #os.system ( "#{pstoimg} -out #{label_png} #{label_ps}" )
         cmd = f"{pstoimg} -out {label_png} {label_ps}"
-        print ( cmd )
+        #print ( cmd )
         os.system ( cmd )
 
         # This is unfinished and undebugged

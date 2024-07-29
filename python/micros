@@ -13,7 +13,7 @@ import wx
 
 # The ysize needs to be tuned by trial and error
 # to hold the "max_lines" number of lines
-xsize = 800
+xsize = 1200
 #ysize = 600
 ysize = 750
 wsize = ( xsize, ysize )
