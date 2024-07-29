@@ -286,7 +286,7 @@ class Display ( wx.Panel ) :
                 #self.preview.Destroy ()
                 self.preview.Close ()
 
-            self.preview = Preview_Frame ( self, self.data, index, self.labelmaker )
+            self.preview = Preview_Frame ( self, self.data, index, self.db, self.labelmaker )
             self.preview.Show ( True )
 
         # The "dir" function shows all methods available
@@ -431,14 +431,16 @@ class Search_Frame ( wx.Frame ) :
 
 class Preview_Frame ( wx.Frame ) :
 
-        def __init__ ( self, parent, data, index, ll ):
+        def __init__ ( self, parent, data, index, db, ll ):
             title = "Mount"
             psize = ( 800, 600 )
 
             wx.Frame.__init__(self, None, wx.ID_ANY, title, size=psize )
             #top = wx.Frame.__init__(self, None, wx.ID_ANY, title, pos=(a,b), size=wsize )
 
+            self.db = db
             self.labelmaker = ll
+
             self.data = data
             self.n_data = len(data)
             self.index = None
@@ -535,6 +537,9 @@ class Preview_Frame ( wx.Frame ) :
                     self.refresh ( self.index - 1)
                 return
             if action == "Edit" :
+                self.edit = Edit_Frame ( self, self.data, self.index, self.db, self.labelmaker )
+                self.edit.Show ( True )
+                self.Close ();
                 return
 
         def __build_nav ( self, pp ) :
@@ -554,6 +559,183 @@ class Preview_Frame ( wx.Frame ) :
             #sz.AddStretchSpacer()
 
             b = wx.Button ( pan, wx.ID_ANY, "Edit")
+            b.Bind ( wx.EVT_BUTTON, self.__onNav )
+            sz.Add ( b, 0, wx.EXPAND )
+
+            return pan
+
+class Edit_Frame ( wx.Frame ) :
+
+        def __init__ ( self, parent, data, index, db, ll ):
+            title = "Edit mount"
+            psize = ( 800, 600 )
+
+            wx.Frame.__init__(self, None, wx.ID_ANY, title, size=psize )
+            #top = wx.Frame.__init__(self, None, wx.ID_ANY, title, pos=(a,b), size=wsize )
+
+            self.db = db
+            self.labelmaker = ll
+
+            self.tags = db.get_tags ()
+
+            self.data = data
+            self.n_data = len(data)
+            self.index = None
+
+            pan = wx.Panel ( self, -1 )
+            s = wx.BoxSizer ( wx.VERTICAL )
+            pan.SetSizer ( s )
+
+            nav = self.__build_nav ( pan )
+            s.Add ( nav, 0, wx.EXPAND )
+
+            # Setup empty framework
+
+            bogus = "-- bogus"
+            self.l1 = EZtext ( pan, s, bogus )
+            #t.SetFont ( xxx_font )
+
+            p, self.e_species = self.__mk_line ( pan, "Species: ", bogus )
+            s.Add ( p, 0, wx.EXPAND )
+            p, self.e_ass = self.__mk_line ( pan, "Associations: ", bogus )
+            s.Add ( p, 0, wx.EXPAND )
+            p, self.e_loc = self.__mk_line ( pan, "Location: ", bogus )
+            s.Add ( p, 0, wx.EXPAND )
+
+            self.l5 = EZtext ( pan, s, bogus )
+            self.l6 = EZtext ( pan, s, bogus )
+            self.l7 = EZtext ( pan, s, bogus )
+            self.l8 = EZtext ( pan, s, bogus )
+
+            self.lc = EZtext ( pan, s, bogus )
+            self.lu = EZtext ( pan, s, bogus )
+
+            # notes
+            self.l9 = EZtext ( pan, s, bogus )
+
+            s.AddStretchSpacer()
+
+            #prev = wx.StaticBitmap ( pan, -1, png, (10, 5), (png.GetWidth(), png.GetHeight()))
+            # This ends up 291 by 290 pixels
+            prev = wx.StaticBitmap ( pan, -1 )
+            s.Add ( prev, 0, wx.EXPAND )
+            self.bitmap = prev
+
+            # fill with data
+            self.refresh ( index )
+
+        # Each line is a panel with a label and text entry
+        def __mk_line ( self, ppan, lab, fill ) :
+
+            pan = wx.Panel ( ppan, -1 )
+            s = wx.BoxSizer ( wx.HORIZONTAL )
+            pan.SetSizer ( s )
+
+            label = EZtext ( pan, s, lab )
+
+            edit = wx.TextCtrl ( pan, size=(100, -1), value="")
+            #edit.SetLabel ( fill )
+            s.Add ( edit, 1, wx.EXPAND )
+
+            s.AddStretchSpacer()
+
+            return pan, edit
+
+        def refresh ( self, index ) :
+            self.index = index
+            mm = self.data[self.index]
+            self.pristine = mm
+
+            #msg = "My ID = " + mm[m_MYID] + "     database ID = " + mm[m_ID]
+            msg = f"My ID = {mm[m_MYID]}      database ID = {mm[m_ID]}"
+            self.l1.SetLabel ( msg )
+
+            #self.e_species.AppendText ( mm[m_SPECIES] )
+            self.e_species.SetValue ( mm[m_SPECIES] )
+            self.e_ass.SetValue ( mm[m_ASS] )
+            self.e_loc.SetValue ( mm[m_LOC] )
+
+            msg = f"Origin: {mm[m_ORIGIN]}"
+            self.l5.SetLabel ( msg )
+            msg = f"Source: {mm[m_SOURCE]}"
+            self.l6.SetLabel ( msg )
+            msg = f"Owner: {mm[m_OWNER]}"
+            self.l7.SetLabel ( msg )
+            msg = f"Status: {mm[m_STATUS]}"
+            self.l8.SetLabel ( msg )
+
+            msg = f"Created: {mm[m_CREATED]}"
+            self.lc.SetLabel ( msg )
+            msg = f"Updated: {mm[m_UPDATED]}"
+            self.lu.SetLabel ( msg )
+
+            # Put notes last so multiple lines have room
+            if mm[m_NOTES] == "" :
+                msg = f"Notes: -none-"
+            else :
+                msg = f"Notes: {mm[m_NOTES]}"
+            self.l9.SetLabel ( msg )
+
+            self.label_refresh ( mm )
+
+        def label_refresh ( self, mm ) :
+            p_path = self.labelmaker.preview ( mm )
+            #path = "label_preview.png"
+            png = wx.Image ( p_path, wx.BITMAP_TYPE_ANY).ConvertToBitmap()
+            self.bitmap.SetBitmap ( png )
+
+        def __check ( self, entry, field ) :
+            new = entry.GetValue ()
+            print ( f"check {self.tags[field]}: {new}" )
+            if new != self.pristine[field] :
+                print ( f"- changed -- {self.pristine[field]} --> {new}" ) 
+                id = self.pristine[m_ID] 
+                #mdb.update_one ( id, field, new )
+
+        def __onNav ( self, event ) :
+            obj = event.GetEventObject()
+            action = obj.GetLabel()
+            print ( "NAV2 button was pushed for: ", action )
+
+            if action == "Next" :
+                if self.index + 1 < self.n_data :
+                    self.refresh ( self.index + 1)
+                return
+            if action == "Prev" :
+                if self.index > 0 :
+                    self.refresh ( self.index - 1)
+                return
+            if action == "Refresh" :
+                self.label_refresh ( self.data[self.index] )
+                return
+            if action == "Save" :
+                self.__check ( self.e_species, m_SPECIES )
+                self.__check ( self.e_loc, m_LOC )
+                self.__check ( self.e_ass, m_ASS )
+                self.Close ()
+                return
+
+        def __build_nav ( self, pp ) :
+            pan = wx.Panel ( pp, -1 )
+            sz = wx.BoxSizer ( wx.HORIZONTAL )
+            pan.SetSizer ( sz )
+
+            b = wx.Button ( pan, wx.ID_ANY, "Prev")
+            b.Bind ( wx.EVT_BUTTON, self.__onNav )
+            sz.Add ( b, 0, wx.EXPAND )
+
+            b = wx.Button ( pan, wx.ID_ANY, "Next")
+            b.Bind ( wx.EVT_BUTTON, self.__onNav )
+            sz.Add ( b, 0, wx.EXPAND )
+
+            sz.AddSpacer ( 50 )
+            #sz.AddStretchSpacer()
+
+            b = wx.Button ( pan, wx.ID_ANY, "Refresh")
+            b.Bind ( wx.EVT_BUTTON, self.__onNav )
+            sz.Add ( b, 0, wx.EXPAND )
+
+            b = wx.Button ( pan, wx.ID_ANY, "Save")
             b.Bind ( wx.EVT_BUTTON, self.__onNav )
             sz.Add ( b, 0, wx.EXPAND )
 

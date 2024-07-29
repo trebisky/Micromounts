@@ -125,7 +125,8 @@ class EZtext ( MyStaticText ) :
             # prefix some space here
             padded = "    " + message
             MyStaticText.__init__ ( self, parent, wx.ID_ANY, padded )
-            sizer.Add ( self, 1, wx.EXPAND )
+            #sizer.Add ( self, 1, wx.EXPAND )
+            sizer.Add ( self, 0, wx.EXPAND )
 
         def SetLabel ( self, msg ) :
             padded = "    " + msg

@@ -2,7 +2,7 @@
 
 import os
 import re
-import Micros
+from Micros import *
 
 class Labelsheet :
     #def __init__ ( self, micros ) :
@@ -31,7 +31,7 @@ class Labelsheet :
             self.loc_font_small = 4
             # ID font size is 5 in boiler
 
-        mypath = Micros.Micros.grog_path ()
+        mypath = Micros.grog_path ()
         #print ( "LABELS grog = ", mypath )
 
         if self.euro :
@@ -58,15 +58,17 @@ class Labelsheet :
 
         # Only 4 things go on label --
         # myid, species, location, associations
-        hh = Micros.to_hash ( mm )
+        #hh = Micros.to_hash ( mm )
 
         #species1 = hh['species'].sub /^\s*/, ""
-        species1 = re.sub ( r'^\s*', '', hh['species'] )
+        #species1 = re.sub ( r'^\s*', '', hh['species'] )
+        species1 = re.sub ( r'^\s*', '', mm[m_SPECIES] )
         #species1 = species1.sub /\s+.*/, ""
         species1 = re.sub ( r'\s+.*', '', species1 )
 
         #ass_a = hh['associations'].split ( /,\s*/ )
-        ass_a = re.split ( r',\s*', hh['associations'] )
+        #ass_a = re.split ( r',\s*', hh['associations'] )
+        ass_a = re.split ( r',\s*', mm[m_ASS] )
         if len(ass_a) > 0 :
             species2 = ass_a[0]
         else :
@@ -86,7 +88,8 @@ class Labelsheet :
         small_sp = longest_sp > 20
 
         #loc_a = hh['location'].split ( /,\s*/ )
-        loc_x = re.split ( r',\s*', hh['location'] )
+        #loc_x = re.split ( r',\s*', hh['location'] )
+        loc_x = re.split ( r',\s*', mm[m_LOC] )
 
         # XXX
         # It might be neater to just append blank lines to
@@ -171,7 +174,7 @@ class Labelsheet :
         else :
             f.write ( f"/Locfontsize {self.loc_font_big} def\n" )
 
-        myid = hh['myid']
+        myid = mm[m_MYID]
 
         # reverse order
         # Postscript needs to see strings with () around them

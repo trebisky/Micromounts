@@ -37,22 +37,22 @@ m_UPDATED = 12
 
 # Convert array to hash.
 # A more general way would use the schema for this.
-def to_hash ( mount ) :
-        hash = {}
-        hash['id'] = mount[0]
-        hash['myid'] = mount[1]
-        hash['species'] = mount[2]
-        hash['associations'] = mount[3]
-        hash['location'] = mount[4]
-        hash['notes'] = mount[5]
-        hash['origin'] = mount[6]
-        hash['source'] = mount[7]
-        hash['owner'] = mount[8]
-        hash['status'] = mount[9]
-        hash['label_info'] = mount[10]
-        hash['created_at'] = mount[11]
-        hash['updated_at'] = mount[12]
-        return hash
+#def to_hash ( mount ) :
+#        hash = {}
+#        hash['id'] = mount[0]
+#        hash['myid'] = mount[1]
+#        hash['species'] = mount[2]
+#        hash['associations'] = mount[3]
+#        hash['location'] = mount[4]
+#        hash['notes'] = mount[5]
+#        hash['origin'] = mount[6]
+#        hash['source'] = mount[7]
+#        hash['owner'] = mount[8]
+#        hash['status'] = mount[9]
+#        hash['label_info'] = mount[10]
+#        hash['created_at'] = mount[11]
+#        hash['updated_at'] = mount[12]
+#        return hash
 
 # We now simplify things by fetching all database records into memory
 # when this class initializes.  All requests will be served from this
@@ -82,6 +82,16 @@ class Micros :
         self.__get_all ()
         #print ( f"{len(self.rows)} entries in database"  )
 
+    # Return the names for fields in a database record.
+    # This can be indexed by m_ID and such as per the
+    # definitions at the start of this file
+    def get_tags ( self ) :
+        schema = self.schema ( 'mounts' )
+        rv = []
+        for s in schema :
+            rv.append ( s[1] )
+        return rv
+
     def __get_all ( self ) :
         cur = self.conn.cursor ()
         cur.execute ( "SELECT * from mounts" )
@@ -105,6 +115,7 @@ class Micros :
                         print ( y )
 
     # Someday this may do more that __get_all()
+    # We call this after every update or insert
     def refresh ( self ) :
         self.__get_all ()
 
@@ -140,7 +151,6 @@ class Micros :
         for t in tables :
             print ( t )
 
-
     # schema gives:
     # (0, 'id', 'INTEGER', 1, None, 1)
     # (1, 'myid', 'varchar(255)', 0, None, 0)
@@ -160,9 +170,10 @@ class Micros :
         cur = self.conn.cursor ()
         result = cur.execute ( "PRAGMA table_info('%s')" % table_name).fetchall()
         cur.close ()
+        return result
 
-        for r in result :
-            print ( r )
+        #for r in result :
+        #    print ( r )
 
     def get_id ( self, id ) :
         cmd = f"SELECT * from mounts WHERE myid='{id}'"
@@ -188,11 +199,11 @@ class Micros :
                 return self.rows[i]
         return None
 
-    def get_hash ( self, id ) :
-        m = self.lookup ( id )
-        if m == None :
-            return None
-        return to_hash ( m )
+#    def get_hash ( self, id ) :
+#        m = self.lookup ( id )
+#        if m == None :
+#            return None
+#        return to_hash ( m )
 
     # return index for id (internal only -- private)
     def lookup_i ( self, id ) :
@@ -236,6 +247,28 @@ class Micros :
         nadd = num - len(rv) + 1
         rv.extend ( self.rows[i+1:i+nadd] )
         return rv
+
+    def update_one ( self, id, name, val ) :
+        cmd = "UPDATE mounts SET "
+        cmd += f"{name}='{val}',"
+        cmd += "updated_at=CURRENT_TIMESTAMP "
+        cmd += f"WHERE id={id}"
+
+        print ( cmd )
+        cur = self.conn.cursor ()
+
+        try:
+            cur.execute ( cmd )
+        except sqlite3.Error as er:
+            print(er.sqlite_errorcode)
+            print(er.sqlite_errorname)
+
+        cur.close ()
+        self.conn.commit ()
+
+        self.refresh ()
+
+        print ( "Update ONE done" )
 
     def update ( self, id, update_hash ) :
         cmd = "UPDATE mounts SET "
