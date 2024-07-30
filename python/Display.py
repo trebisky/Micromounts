@@ -69,7 +69,7 @@ class Display ( wx.Panel ) :
         def onNav ( self, event ) :
             obj = event.GetEventObject()
             action = obj.GetLabel()
-            print ( "NAV button was pushed for: ", action )
+            #print ( "NAV button was pushed for: ", action )
 
             if action == "Next" :
                 if self.show_search :
@@ -93,9 +93,12 @@ class Display ( wx.Panel ) :
                 self.__load_display ( 0 )
                 return
             if action == "New" :
-                # XXX - build new record, then do the
-                # same as clone
-                pass
+                self.db.mk_new ()
+                self.refresh ( False )
+                index = len(self.data)-1
+                edit = Edit_Frame ( self, self, self.data, index, self.db, self.labelmaker )
+                edit.Show ( True )
+                return
             if action == "End" :
                 if self.show_search :
                     start = self.n_search - self.n_lines
@@ -499,10 +502,15 @@ class Preview_Frame ( wx.Frame ) :
             nav = self.__build_nav ( pan )
             s.Add ( nav, 0, wx.EXPAND )
 
+            s.AddSpacer ( 20 )
+
             # Setup empty framework
 
             bogus = "-- bogus"
             self.l1 = EZtext ( pan, s, bogus )
+
+            s.AddSpacer ( 20 )
+
             #t.SetFont ( xxx_font )
             self.l2 = EZtext ( pan, s, bogus )
             self.l3 = EZtext ( pan, s, bogus )
@@ -573,7 +581,7 @@ class Preview_Frame ( wx.Frame ) :
         def __onNav ( self, event ) :
             obj = event.GetEventObject()
             action = obj.GetLabel()
-            print ( "NAV2 button was pushed for: ", action )
+            #print ( "NAV2 button was pushed for: ", action )
 
             if action == "Next" :
                 if self.index + 1 < self.n_data :
@@ -638,7 +646,6 @@ class Preview_Frame ( wx.Frame ) :
             print ( f"CLONE {new[m_ID]}" )
             self.db.insert ( new )
             self.main_display.refresh ( False )
-            pass
 
 
 # ========================= EDIT ===================================
@@ -684,6 +691,7 @@ class Edit_Frame ( wx.Frame ) :
             bogus = "-- bogus"
             self.l1 = EZtext ( pan, s, bogus )
             #t.SetFont ( xxx_font )
+            s.AddSpacer ( 20 )
 
             p, self.e_species = self.__mk_line ( pan, "Species: ", bogus )
             s.Add ( p, 0, wx.EXPAND )
@@ -860,7 +868,7 @@ class Edit_Frame ( wx.Frame ) :
         def __onNav ( self, event ) :
             obj = event.GetEventObject()
             action = obj.GetLabel()
-            print ( "NAV2 button was pushed for: ", action )
+            #print ( "NAV2 button was pushed for: ", action )
 
             if action == "Next" :
                 if self.index + 1 < self.n_data :
@@ -876,9 +884,6 @@ class Edit_Frame ( wx.Frame ) :
             if action == "Save" :
                 self.__doSave ()
                 self.Close ()
-                return
-            if action == "Fix ID" :
-                print ( "Fix ID" )
                 return
             if action == "Cancel" :
                 self.Close ()
@@ -905,12 +910,6 @@ class Edit_Frame ( wx.Frame ) :
             sz.Add ( b, 0, wx.EXPAND )
 
             b = wx.Button ( pan, wx.ID_ANY, "Save")
-            b.Bind ( wx.EVT_BUTTON, self.__onNav )
-            sz.Add ( b, 0, wx.EXPAND )
-
-            sz.AddSpacer ( 40 )
-
-            b = wx.Button ( pan, wx.ID_ANY, "Fix ID")
             b.Bind ( wx.EVT_BUTTON, self.__onNav )
             sz.Add ( b, 0, wx.EXPAND )
 

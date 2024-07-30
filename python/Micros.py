@@ -75,6 +75,28 @@ class Micros :
 
         print ( "Database: ", db_path )
 
+        # Prototype for every new mount
+        # We now set "TT" always for the owner,
+        # but the database has many records where
+        # we have "" (40 of them) or None (137 of them).
+        # This should get fixed someday.
+        # currently this field is unused, but it might
+        # someday be used to denote subcollections
+        self.proto = [
+            None,
+            "",
+            "new",      # species
+            '',
+            "somewhere",
+            "",
+            "collected",
+            "",
+            "TT",
+            "ok"
+            "",
+            None,
+            None ]
+
         try:
             self.conn = sqlite3.connect ( db_path )
         except OSError as e:
@@ -325,6 +347,10 @@ class Micros :
         #self.refresh ()
 
         print ( "Update done" )
+
+    # Add an entirely new record
+    def mk_new ( self ) :
+        self.insert ( self.proto )
 
     # Ruby
     # everything is saved as a string.
