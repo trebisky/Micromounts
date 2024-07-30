@@ -50,8 +50,7 @@ class Display ( wx.Panel ) :
 
             #self.__load_display ( self.n_data - self.n_lines )
             #self.__load_display ( self.SHOW_END )
-            self.cur = self.SHOW_END
-            self.refresh ()
+            self.refresh ( False )
 
         # lookup and return entry
         def __lookup_id ( self, my_id ) :
@@ -261,9 +260,15 @@ class Display ( wx.Panel ) :
 
         # This gets called on startup,
         # and whenever we do an insert or update
-        def refresh ( self ) :
+        def refresh ( self, is_update ) :
             self.data = self.db.all ()
             self.n_data = len ( self.data )
+
+            msg = f"{self.n_data} mounts"
+            self.status.SetLabel ( msg )
+
+            if not is_update :
+                self.cur = self.SHOW_END
 
             # abandon any search results
             self.search_data = []
@@ -508,7 +513,7 @@ class Preview_Frame ( wx.Frame ) :
             s.Add ( prev, 0, wx.EXPAND )
             self.bitmap = prev
 
-            # fill with data
+            # fill display with data
             self.refresh ( index )
 
         def refresh ( self, index ) :
@@ -618,6 +623,7 @@ class Preview_Frame ( wx.Frame ) :
             new = self.data[index]
             print ( f"CLONE {new[m_ID]}" )
             self.db.insert ( new )
+            self.main_display.refresh ( False )
             pass
 
 
@@ -736,19 +742,30 @@ class Edit_Frame ( wx.Frame ) :
 
             self.label_refresh ( mm )
 
+        # Temporary copy, updated just for label
+        def __update_m ( self, mm ) :
+            ml = list ( mm )
+            ml[m_SPECIES] = self.e_species.GetValue ()
+            ml[m_ASS] = self.e_ass.GetValue ()
+            ml[m_LOC] = self.e_loc.GetValue ()
+            return ml
+
+        # Redo the label image
         def label_refresh ( self, mm ) :
-            p_path = self.labelmaker.preview ( mm )
+            m_label = self.__update_m ( mm )
+            p_path = self.labelmaker.preview ( m_label )
             #path = "label_preview.png"
             png = wx.Image ( p_path, wx.BITMAP_TYPE_ANY).ConvertToBitmap()
             self.bitmap.SetBitmap ( png )
 
         def __check ( self, entry, field ) :
             new = entry.GetValue ()
-            print ( f"check {self.tags[field]}: {new}" )
+            name = self.tags[field]
+            print ( f"check {name}: {new}" )
             if new != self.pristine[field] :
                 print ( f"- changed -- {self.pristine[field]} --> {new}" ) 
                 id = self.pristine[m_ID] 
-                #mdb.update_one ( id, field, new )
+                self.db.update_one ( id, name, new )
 
         def __onNav ( self, event ) :
             obj = event.GetEventObject()
@@ -770,7 +787,7 @@ class Edit_Frame ( wx.Frame ) :
                 self.__check ( self.e_species, m_SPECIES )
                 self.__check ( self.e_loc, m_LOC )
                 self.__check ( self.e_ass, m_ASS )
-                self.main_display.refresh ()
+                self.main_display.refresh ( True )
                 self.Close ()
                 return
 

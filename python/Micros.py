@@ -7,6 +7,7 @@
 
 import os
 import sqlite3
+import datetime
 
 ##micro_db = "minerals.sqlite3"
 
@@ -65,7 +66,7 @@ m_UPDATED = 12
 class Micros :
     def __init__ ( self ) :
         self.conn = None
-        self.rows = []
+        self.data = []
 
         self.mypath = Micros.grog_path ()
         #print ( "Running from: ", self.mypath )
@@ -81,11 +82,27 @@ class Micros :
 
         self.__get_tags ()
         self.__get_all ()
-        #print ( f"{len(self.rows)} entries in database"  )
+        #print ( f"{len(self.data)} entries in database"  )
+
+        # Handy place to call this for debugging
+        # x = self.__gen_myid ()
+        # print ( "Next myid = ", x )
 
     # Generate next ID number for clone or new insert
     def __gen_myid ( self ) :
-        return "25-1"
+        last = self.data[-1]
+        last_id = last[m_MYID]
+        (year,index) = last_id.split ( '-' )
+        #print ( "last: ", year, index )
+
+        today = datetime.datetime.now()
+        #print ( today.year )
+        #print ( today.year - 2000 )
+        cur_year = str ( today.year - 2000 )
+        if year != cur_year :
+            return f'{cur_year}-1'
+        else :
+            return f'{year}-{int(index)+1}'
 
     # Return the names for fields in a database record.
     # This can be indexed by m_ID and such as per the
@@ -103,18 +120,21 @@ class Micros :
     def __get_all ( self ) :
         cur = self.conn.cursor ()
         cur.execute ( "SELECT * from mounts" )
-        self.rows = cur.fetchall ()
+        self.data = cur.fetchall ()
         cur.close ()
 
+    # We call this after an insert or update,
+    # so it needs to reread the database.
     def all ( self ) :
-        return self.rows
+        self.__get_all ()
+        return self.data
 
     # A one time check.
     # look for duplicate values among myid
     def validate ( self ) :
-        for x in self.rows :
+        for x in self.data :
             count = 0
-            for y in self.rows :
+            for y in self.data :
                 if x[1] == y[1] :
                     count += 1
                     if count > 1 :
@@ -124,8 +144,8 @@ class Micros :
 
     # Someday this may do more that __get_all()
     # We call this after every update or insert
-    def refresh ( self ) :
-        self.__get_all ()
+    #def refresh ( self ) :
+    #    self.__get_all ()
 
     # The idea here is to find out where this script is running
     # in order to generate an absolute path to find the database
@@ -196,15 +216,15 @@ class Micros :
 
 
     def show_all ( self ) :
-        for r in self.rows :
+        for r in self.data :
             print ( r )
 
     # return data array for id
     def lookup ( self, id ) :
-        n = len ( self.rows )
+        n = len ( self.data )
         for i in range(n) :
-            if self.rows[i][1] == id :
-                return self.rows[i]
+            if self.data[i][1] == id :
+                return self.data[i]
         return None
 
 #    def get_hash ( self, id ) :
@@ -215,10 +235,10 @@ class Micros :
 
     # return index for id (internal only -- private)
     def lookup_i ( self, id ) :
-        n = len ( self.rows )
+        n = len ( self.data )
         for i in range(n) :
-            if self.rows[i][m_MYID] == id :
-                #print ( "found: ", self.rows[i] )
+            if self.data[i][m_MYID] == id :
+                #print ( "found: ", self.data[i] )
                 return i
         return None
 
@@ -230,7 +250,7 @@ class Micros :
             return None
         #print ( "index: ", i )
         stop = i+num
-        labels = self.rows[i:stop]
+        labels = self.data[i:stop]
         #for l in labels :
         #    print ( l )
         return labels
@@ -253,7 +273,7 @@ class Micros :
         last_id = rv[-1][1]
         i = self.lookup_i ( last_id )
         nadd = num - len(rv) + 1
-        rv.extend ( self.rows[i+1:i+nadd] )
+        rv.extend ( self.data[i+1:i+nadd] )
         return rv
 
     def update_one ( self, id, name, val ) :
@@ -275,7 +295,8 @@ class Micros :
         cur.close ()
         self.conn.commit ()
 
-        self.refresh ()
+        # Caller will use "all() to reread data
+        #self.refresh ()
 
         print ( "Update ONE done" )
 
@@ -300,7 +321,8 @@ class Micros :
         cur.close ()
         self.conn.commit ()
 
-        self.refresh ()
+        # Caller will use "all() to reread data
+        #self.refresh ()
 
         print ( "Update done" )
 
@@ -328,11 +350,12 @@ class Micros :
         cmd = f"INSERT into mounts({stuff1}) VALUES ({stuff2})"
         print ( "INSERT: ", cmd )
 
+        # skip db-id and the last two "_at" timestamps
         values = list ( new[1:1+nin] )
         print ( "VALUES: ", values )
         print ( len ( values ) )
 
-        # Fix my_id
+        # Generate new my_id
         values[0] = self.__gen_myid ()
 
         if len(values) != nin :
