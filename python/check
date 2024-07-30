@@ -1,0 +1,32 @@
+#!/bin/python3
+
+# check
+#
+# Tom Trebisky  7-23-2024
+
+from Micros import *
+
+m = Micros ()
+mm = m.all ()
+m.close ()
+
+print ( len(mm) )
+#print ( mm[0][m_OWNER] )
+
+blank = 0
+none = 0
+for m in mm :
+    if m[m_OWNER] == "TT" :
+        continue
+    if m[m_OWNER] == "" :
+        blank += 1
+        continue
+    if m[m_OWNER] == None :
+        none += 1
+        continue
+    print ( m[m_OWNER] )
+
+print ( blank )
+print ( none )
+
+# THE END

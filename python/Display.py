@@ -112,7 +112,7 @@ class Display ( wx.Panel ) :
                 return
             if action == "Find" :
                 xx = self.find.GetValue()
-                print ( "Look for: ", xx )
+                #print ( "Look for: ", xx )
                 ii = self.__lookup_I ( xx )
                 if ii == None :
                     print ( xx, " not found" )
@@ -471,7 +471,7 @@ class Search_Frame ( wx.Frame ) :
                 self.display.do_search ( True, ass, False, xx )
             if action == "Location" :
                 xx = self.find_loc.GetValue()
-                print ( "Look for location: ", xx )
+                #print ( "Look for location: ", xx )
                 self.display.do_search ( False, False, True, xx )
             #self.Destroy ()
             self.Close ()
@@ -838,9 +838,9 @@ class Edit_Frame ( wx.Frame ) :
         def __check ( self, entry, field ) :
             new = entry.GetValue ()
             name = self.tags[field]
-            print ( f"check {name}: {new}" )
+            #print ( f"check {name}: {new}" )
             if new != self.pristine[field] :
-                print ( f"- changed -- {self.pristine[field]} --> {new}" ) 
+                #print ( f"- changed -- {self.pristine[field]} --> {new}" ) 
                 id = self.pristine[m_ID] 
                 self.db.update_one ( id, name, new )
 
@@ -848,9 +848,9 @@ class Edit_Frame ( wx.Frame ) :
             ix = entry.GetSelection ()
             new = vals[ix]
             name = self.tags[field]
-            print ( f"check_r {name}: {new}" )
+            #print ( f"check_r {name}: {new}" )
             if new != self.pristine[field] :
-                print ( f"- changed_R -- {self.pristine[field]} --> {new}" ) 
+                #print ( f"- changed_R -- {self.pristine[field]} --> {new}" ) 
                 id = self.pristine[m_ID] 
                 self.db.update_one ( id, name, new )
 

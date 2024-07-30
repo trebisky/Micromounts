@@ -1,0 +1,38 @@
+#!/bin/python3
+
+# fixup
+#
+# Tom Trebisky  7-23-2024
+
+from Micros import *
+
+# All owner fields should be "TT".
+# This will fix all of those that
+# aren't (we have found them to be
+# '' or None
+#
+# If it is run again, nothing will happen
+
+mdb = Micros ()
+mm = mdb.all ()
+
+n = 0
+for m in mm :
+    if m[m_OWNER] != "TT" :
+        mdb.update_one ( m[m_ID], "owner", "TT" )
+        n += 1
+
+# This is fine, we have a few lost, the rest ok
+#for m in mm :
+#    if m[m_STATUS] != "ok" :
+#        print ( m[m_STATUS] )
+
+# A visual inspection of these looks fine
+#for m in mm :
+#        print ( m[m_ORIGIN] )
+
+mdb.close ()
+
+print ( n, " records fixed" )
+
+# THE END

@@ -1,0 +1,20 @@
+#!/bin/python3
+
+# fix_myid
+#
+# This is a command line tool to fix an incorrect myid field
+# I was going to add this as a dialog/feature to the GUI,
+# but I decided it was so infrequent that it could just
+# be handled via a command line tool like this.
+#
+# Tom Trebisky  7-30-2024
+
+from Micros import *
+
+m = Micros ()
+
+m.update_one ( 274, "myid", "08-144" )
+
+m.close ()
+
+# THE END

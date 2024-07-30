@@ -304,7 +304,7 @@ class Micros :
         cmd += "updated_at=CURRENT_TIMESTAMP "
         cmd += f"WHERE id={id}"
 
-        print ( cmd )
+        #print ( cmd )
         cur = self.conn.cursor ()
 
         try:
@@ -320,8 +320,9 @@ class Micros :
         # Caller will use "all() to reread data
         #self.refresh ()
 
-        print ( "Update ONE done" )
+        #print ( "Update ONE done" )
 
+    # Never used.
     def update ( self, id, update_hash ) :
         cmd = "UPDATE mounts SET "
         for (name,val) in update_hash.items() :
@@ -329,7 +330,7 @@ class Micros :
         cmd += "updated_at=CURRENT_TIMESTAMP "
         cmd += f"WHERE id={id}"
 
-        print ( cmd )
+        #print ( cmd )
 
         cur = self.conn.cursor ()
 
@@ -342,11 +343,6 @@ class Micros :
 
         cur.close ()
         self.conn.commit ()
-
-        # Caller will use "all() to reread data
-        #self.refresh ()
-
-        print ( "Update done" )
 
     # Add an entirely new record
     def mk_new ( self ) :
