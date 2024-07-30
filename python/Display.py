@@ -92,6 +92,10 @@ class Display ( wx.Panel ) :
             if action == "Start" :
                 self.__load_display ( 0 )
                 return
+            if action == "New" :
+                # XXX - build new record, then do the
+                # same as clone
+                pass
             if action == "End" :
                 if self.show_search :
                     start = self.n_search - self.n_lines
@@ -148,6 +152,12 @@ class Display ( wx.Panel ) :
             sz.Add ( b, 0, wx.EXPAND )
 
             b = wx.Button ( pan, wx.ID_ANY, "End")
+            b.Bind ( wx.EVT_BUTTON, self.onNav )
+            sz.Add ( b, 0, wx.EXPAND )
+
+            sz.AddSpacer(20)
+
+            b = wx.Button ( pan, wx.ID_ANY, "New")
             b.Bind ( wx.EVT_BUTTON, self.onNav )
             sz.Add ( b, 0, wx.EXPAND )
 
@@ -391,6 +401,8 @@ class Display ( wx.Panel ) :
             rv += "  " + loc
             return rv
 
+# ========================= SEARCH ===================================
+
 class Search_Frame ( wx.Frame ) :
 
         def __init__ ( self, parent, db ):
@@ -460,6 +472,8 @@ class Search_Frame ( wx.Frame ) :
                 self.display.do_search ( False, False, True, xx )
             #self.Destroy ()
             self.Close ()
+
+# ========================= PREVIEW ===================================
 
 class Preview_Frame ( wx.Frame ) :
 
@@ -627,11 +641,13 @@ class Preview_Frame ( wx.Frame ) :
             pass
 
 
+# ========================= EDIT ===================================
+
 class Edit_Frame ( wx.Frame ) :
 
         def __init__ ( self, parent, main, data, index, db, ll ):
             title = "Edit mount"
-            psize = ( 800, 600 )
+            psize = ( 800, 760 )
 
             wx.Frame.__init__(self, None, wx.ID_ANY, title, size=psize )
             #top = wx.Frame.__init__(self, None, wx.ID_ANY, title, pos=(a,b), size=wsize )
@@ -646,12 +662,22 @@ class Edit_Frame ( wx.Frame ) :
             self.n_data = len(data)
             self.index = None
 
+            #self.origin_vals = %w(collected bought gift trade)
+            self.origin_vals = "collected bought gift trade".split()
+            #self.origin_labels = %w(Collected Purchased Gift Trade)
+            self.origin_labels = "Collected Bought Gift Trade".split()
+
+            self.status_vals = "ok lost gift trade".split()
+            self.status_labels = "OK Lost Given Traded".split()
+
             pan = wx.Panel ( self, -1 )
             s = wx.BoxSizer ( wx.VERTICAL )
             pan.SetSizer ( s )
 
             nav = self.__build_nav ( pan )
             s.Add ( nav, 0, wx.EXPAND )
+
+            s.AddSpacer ( 20 )
 
             # Setup empty framework
 
@@ -666,16 +692,37 @@ class Edit_Frame ( wx.Frame ) :
             p, self.e_loc = self.__mk_line ( pan, "Location: ", bogus )
             s.Add ( p, 0, wx.EXPAND )
 
-            self.l5 = EZtext ( pan, s, bogus )
-            self.l6 = EZtext ( pan, s, bogus )
-            self.l7 = EZtext ( pan, s, bogus )
-            self.l8 = EZtext ( pan, s, bogus )
+            s.AddSpacer ( 20 )
 
-            self.lc = EZtext ( pan, s, bogus )
-            self.lu = EZtext ( pan, s, bogus )
+            #self.l5 = EZtext ( pan, s, bogus )  # origin
+            #self.r5 = wx.RadioBox ( p, label = 'Origin', pos = (80,10), choices = lblList , majorDimension = 1, style = wx.RA_SPECIFY_ROWS)
+            self.r_origin = wx.RadioBox ( pan, label = 'Origin', choices = self.origin_labels, style = wx.RA_SPECIFY_COLS )
+            s.Add ( self.r_origin, 0, wx.EXPAND )
+
+            s.AddSpacer ( 10 )
+
+            p, self.e_source = self.__mk_line ( pan, "Source: ", bogus )
+            s.Add ( p, 0, wx.EXPAND )
+
+            #self.l8 = EZtext ( pan, s, bogus )  # status
+            self.r_status = wx.RadioBox ( pan, label = 'Status', choices = self.status_labels, style = wx.RA_SPECIFY_COLS )
+            s.Add ( self.r_status, 0, wx.EXPAND )
+
+            s.AddSpacer ( 10 )
+
+            #self.l6 = EZtext ( pan, s, bogus )  # source
+
+            self.l_owner = EZtext ( pan, s, bogus )  # owner
+
+            self.lc = EZtext ( pan, s, bogus )  # created
+            self.lu = EZtext ( pan, s, bogus )  # updated
+
+            s.AddSpacer ( 10 )
 
             # notes
-            self.l9 = EZtext ( pan, s, bogus )
+            #self.l9 = EZtext ( pan, s, bogus )
+            p, self.e_notes = self.__mk_line ( pan, "Notes: ", bogus )
+            s.Add ( p, 0, wx.EXPAND )
 
             s.AddStretchSpacer()
 
@@ -688,7 +735,7 @@ class Edit_Frame ( wx.Frame ) :
             # fill with data
             self.refresh ( index )
 
-        # Each line is a panel with a label and text entry
+        # Make a line that is a panel with a label and text entry
         def __mk_line ( self, ppan, lab, fill ) :
 
             pan = wx.Panel ( ppan, -1 )
@@ -705,6 +752,14 @@ class Edit_Frame ( wx.Frame ) :
 
             return pan, edit
 
+        # returning 0 on miss is bogus, but better (??)
+        # than having the program blow up
+        def __find_index ( self, vals, what ) :
+            for i in range ( len(vals) ) :
+                if what == vals[i] :
+                    return i
+            return 0
+
         def refresh ( self, index ) :
             self.index = index
             mm = self.data[self.index]
@@ -719,14 +774,24 @@ class Edit_Frame ( wx.Frame ) :
             self.e_ass.SetValue ( mm[m_ASS] )
             self.e_loc.SetValue ( mm[m_LOC] )
 
-            msg = f"Origin: {mm[m_ORIGIN]}"
-            self.l5.SetLabel ( msg )
-            msg = f"Source: {mm[m_SOURCE]}"
-            self.l6.SetLabel ( msg )
+            #msg = f"Origin: {mm[m_ORIGIN]}"
+            #self.l5.SetLabel ( msg )
+            ix = self.__find_index ( self.origin_vals, mm[m_ORIGIN] )
+            self.r_origin.SetSelection ( ix )
+
+            #msg = f"Status: {mm[m_STATUS]}"
+            #self.l8.SetLabel ( msg )
+            ix = self.__find_index ( self.status_vals, mm[m_STATUS] )
+            self.r_status.SetSelection ( ix )
+
+            self.e_source.SetValue ( mm[m_SOURCE] )
+
+            #msg = f"Source: {mm[m_SOURCE]}"
+            #self.l6.SetLabel ( msg )
+
+            # always TT at this time
             msg = f"Owner: {mm[m_OWNER]}"
-            self.l7.SetLabel ( msg )
-            msg = f"Status: {mm[m_STATUS]}"
-            self.l8.SetLabel ( msg )
+            self.l_owner.SetLabel ( msg )
 
             msg = f"Created: {mm[m_CREATED]}"
             self.lc.SetLabel ( msg )
@@ -734,15 +799,19 @@ class Edit_Frame ( wx.Frame ) :
             self.lu.SetLabel ( msg )
 
             # Put notes last so multiple lines have room
-            if mm[m_NOTES] == "" :
-                msg = f"Notes: -none-"
-            else :
-                msg = f"Notes: {mm[m_NOTES]}"
-            self.l9.SetLabel ( msg )
+            #if mm[m_NOTES] == "" :
+            #    msg = f"Notes: -none-"
+            #else :
+            #    msg = f"Notes: {mm[m_NOTES]}"
+            #self.l9.SetLabel ( msg )
+
+            self.e_notes.SetValue ( mm[m_NOTES] )
 
             self.label_refresh ( mm )
 
         # Temporary copy, updated just for label
+        # The labels only uses 4 fields:
+        #  myid, species, ass, and loc
         def __update_m ( self, mm ) :
             ml = list ( mm )
             ml[m_SPECIES] = self.e_species.GetValue ()
@@ -767,6 +836,27 @@ class Edit_Frame ( wx.Frame ) :
                 id = self.pristine[m_ID] 
                 self.db.update_one ( id, name, new )
 
+        def __check_r ( self, entry, vals, field ) :
+            ix = entry.GetSelection ()
+            new = vals[ix]
+            name = self.tags[field]
+            print ( f"check_r {name}: {new}" )
+            if new != self.pristine[field] :
+                print ( f"- changed_R -- {self.pristine[field]} --> {new}" ) 
+                id = self.pristine[m_ID] 
+                self.db.update_one ( id, name, new )
+
+        # Each check call may do an update
+        def __doSave ( self ) :
+            self.__check ( self.e_species, m_SPECIES )
+            self.__check ( self.e_loc, m_LOC )
+            self.__check ( self.e_ass, m_ASS )
+            self.__check ( self.e_source, m_SOURCE )
+            self.__check ( self.e_notes, m_NOTES )
+            self.__check_r ( self.r_origin, self.origin_vals, m_ORIGIN )
+            self.__check_r ( self.r_status, self.status_vals, m_STATUS )
+            self.main_display.refresh ( True )
+
         def __onNav ( self, event ) :
             obj = event.GetEventObject()
             action = obj.GetLabel()
@@ -784,10 +874,13 @@ class Edit_Frame ( wx.Frame ) :
                 self.label_refresh ( self.data[self.index] )
                 return
             if action == "Save" :
-                self.__check ( self.e_species, m_SPECIES )
-                self.__check ( self.e_loc, m_LOC )
-                self.__check ( self.e_ass, m_ASS )
-                self.main_display.refresh ( True )
+                self.__doSave ()
+                self.Close ()
+                return
+            if action == "Fix ID" :
+                print ( "Fix ID" )
+                return
+            if action == "Cancel" :
                 self.Close ()
                 return
 
@@ -812,6 +905,19 @@ class Edit_Frame ( wx.Frame ) :
             sz.Add ( b, 0, wx.EXPAND )
 
             b = wx.Button ( pan, wx.ID_ANY, "Save")
+            b.Bind ( wx.EVT_BUTTON, self.__onNav )
+            sz.Add ( b, 0, wx.EXPAND )
+
+            sz.AddSpacer ( 40 )
+
+            b = wx.Button ( pan, wx.ID_ANY, "Fix ID")
+            b.Bind ( wx.EVT_BUTTON, self.__onNav )
+            sz.Add ( b, 0, wx.EXPAND )
+
+            #sz.AddSpacer ( 50 )
+            sz.AddStretchSpacer()
+
+            b = wx.Button ( pan, wx.ID_ANY, "Cancel")
             b.Bind ( wx.EVT_BUTTON, self.__onNav )
             sz.Add ( b, 0, wx.EXPAND )
 
