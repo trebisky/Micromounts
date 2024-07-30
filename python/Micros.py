@@ -79,18 +79,26 @@ class Micros :
         except OSError as e:
             print(e)
 
+        self.__get_tags ()
         self.__get_all ()
         #print ( f"{len(self.rows)} entries in database"  )
+
+    # Generate next ID number for clone or new insert
+    def __gen_myid ( self ) :
+        return "25-1"
 
     # Return the names for fields in a database record.
     # This can be indexed by m_ID and such as per the
     # definitions at the start of this file
     def get_tags ( self ) :
+        return self.tags
+
+    def __get_tags ( self ) :
         schema = self.schema ( 'mounts' )
         rv = []
         for s in schema :
             rv.append ( s[1] )
-        return rv
+        self.tags = rv
 
     def __get_all ( self ) :
         cur = self.conn.cursor ()
@@ -260,6 +268,7 @@ class Micros :
         try:
             cur.execute ( cmd )
         except sqlite3.Error as er:
+            print ( "Update One gave SQL error" )
             print(er.sqlite_errorcode)
             print(er.sqlite_errorname)
 
@@ -278,11 +287,13 @@ class Micros :
         cmd += f"WHERE id={id}"
 
         print ( cmd )
+
         cur = self.conn.cursor ()
 
         try:
             cur.execute ( cmd )
         except sqlite3.Error as er:
+            print ( "Update gave SQL error" )
             print(er.sqlite_errorcode)
             print(er.sqlite_errorname)
 
@@ -292,5 +303,54 @@ class Micros :
         self.refresh ()
 
         print ( "Update done" )
+
+    # Ruby
+    # everything is saved as a string.
+    # Except "id", which is an autoincrement field.
+    #
+    # @ins_cols = @num_cols - 3
+    # @ins_names = @names[1,@ins_cols].join(",")
+    # @ins_markers = Array.new(@ins_cols,"?").join(",")
+
+    def insert ( self, new ) :
+        # The -3 skips "id" and the two "_at" timestamps
+        nin = len ( self.tags ) - 3
+        stuff1 = ",".join ( self.tags[1:] )
+        print ( "INSERT: ", stuff1 )
+        stuff2 = ",".join ( ["?"]*nin )
+        stuff2 += ",CURRENT_TIMESTAMP"
+        stuff2 += ",CURRENT_TIMESTAMP"
+
+        print ( "INSERT: ", stuff2 )
+
+        # SQL will look sorta like this:
+        # INSERT INTO projects(name,species,loc) VALUES(?,?,?)
+        cmd = f"INSERT into mounts({stuff1}) VALUES ({stuff2})"
+        print ( "INSERT: ", cmd )
+
+        values = list ( new[1:1+nin] )
+        print ( "VALUES: ", values )
+        print ( len ( values ) )
+
+        # Fix my_id
+        values[0] = self.__gen_myid ()
+
+        if len(values) != nin :
+            print ( "Values broken" )
+            exit ()
+
+        cur = self.conn.cursor ()
+
+        try:
+            cur.execute ( cmd, values )
+        except sqlite3.Error as er:
+            print ( "Insert gave SQL error" )
+            print(er.sqlite_errorcode)
+            print(er.sqlite_errorname)
+
+        cur.close ()
+        self.conn.commit ()
+
+        print ( "Insert done" )
 
 # THE END

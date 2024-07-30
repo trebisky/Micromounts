@@ -114,7 +114,7 @@ class Display ( wx.Panel ) :
                 self.__load_display ( ii )
                 return
             if action == "Search" :
-                search = Search_Frame ( self )
+                search = Search_Frame ( self, self.db )
                 search.Show ( True )
                 return
             # This is a toggle
@@ -388,13 +388,14 @@ class Display ( wx.Panel ) :
 
 class Search_Frame ( wx.Frame ) :
 
-        def __init__ ( self, parent ):
+        def __init__ ( self, parent, db ):
             title = "Search"
             psize = ( 400, 200 )
 
             # This happens to be the parent, and we will need to call back
             # to actually do the search
             self.display = parent
+            self.db = db
 
             wx.Frame.__init__(self, None, wx.ID_ANY, title, size=psize )
 
@@ -569,7 +570,7 @@ class Preview_Frame ( wx.Frame ) :
                 self.Close ();
                 return
             if action == "Clone" :
-                print ( f"CLONE {self.data[self.index][m_ID]}" )
+                self.clone ( self.index )
                 return
 
         def __build_nav ( self, pp ) :
@@ -599,6 +600,26 @@ class Preview_Frame ( wx.Frame ) :
             sz.Add ( b, 0, wx.EXPAND )
 
             return pan
+
+    # ruby code for clone
+    # alloc
+    # m_new.species = orig.species
+    # m_new.associations = orig.associations
+    # m_new.location = orig.location
+
+    # m_new.notes = orig.notes
+    # m_new.origin = orig.origin
+    # m_new.source = orig.source
+    # m_new.owner = orig.owner
+    # m_new.status = orig.status
+    # insert
+
+        def clone ( self, index ) :
+            new = self.data[index]
+            print ( f"CLONE {new[m_ID]}" )
+            self.db.insert ( new )
+            pass
+
 
 class Edit_Frame ( wx.Frame ) :
 
