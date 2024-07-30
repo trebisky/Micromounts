@@ -19,20 +19,22 @@ class Display ( wx.Panel ) :
         def __init__ ( self, parent, db, n_lines ):
             wx.Panel.__init__ ( self, parent )
 
-            self.db = db
-            self.n_lines = n_lines
-
             self.preview = None
             self.labelmaker = Labelsheet ()
 
+            self.db = db
+            self.n_lines = n_lines
+
+            # Refresh will redo this, but we need
+            # this early
             self.data = self.db.all ()
             self.n_data = len ( self.data )
-            self.cur = None
 
-            self.search_data = []
-            self.n_search = 0
-            self.show_search = False
-            self.cur_search = None
+            ## Now handled by refresh
+            ##self.show_search = False
+            ##self.search_data = []
+            ##self.n_search = 0
+            ##self.cur_search = None
 
             s = wx.BoxSizer ( wx.VERTICAL )
             self.SetSizer ( s )
@@ -44,7 +46,12 @@ class Display ( wx.Panel ) :
 
             #self.__load_display ( 0 )
             #self.__load_display ( 1270 )
-            self.__load_display ( self.n_data - self.n_lines )
+            self.SHOW_END = 99999999
+
+            #self.__load_display ( self.n_data - self.n_lines )
+            #self.__load_display ( self.SHOW_END )
+            self.cur = self.SHOW_END
+            self.refresh ()
 
         # lookup and return entry
         def __lookup_id ( self, my_id ) :
@@ -90,7 +97,9 @@ class Display ( wx.Panel ) :
                 if self.show_search :
                     start = self.n_search - self.n_lines
                 else :
-                    start = self.n_data - self.n_lines
+                    # Hack, but we need both here
+                    start = self.SHOW_END
+                    self.cur = self.SHOW_END
                 if start < 0 :
                     start = 0
                 self.__load_display ( start )
@@ -236,10 +245,11 @@ class Display ( wx.Panel ) :
 
             self.n_search = len ( self.search_data )
             #print ( "Found ", self.n_search, " items" )
-            # XXX this may be confusing -- if the search fals,
+            # XXX this may be confusing -- if the search fails,
             # we just go back to the full display
-            # show match count on main display
-            stat = f"{self.n_search} found"
+            # But, we do show match count on main display
+            # This string gets trucated if too long.
+            stat = f"{self.n_search} of {self.n_data}"
             self.status.SetLabel ( stat )
             if self.n_search > 0 :
                 self.__show_search ( True )
@@ -248,6 +258,20 @@ class Display ( wx.Panel ) :
                 self.__show_search ( False )
                 self.__load_display ( self.cur )
             return
+
+        # This gets called on startup,
+        # and whenever we do an insert or update
+        def refresh ( self ) :
+            self.data = self.db.all ()
+            self.n_data = len ( self.data )
+
+            # abandon any search results
+            self.search_data = []
+            self.n_search = 0
+            self.cur_search = None
+
+            self.__show_search ( False )
+            self.__load_display ( self.cur )
 
         def __load_display ( self, start ) :
 
@@ -263,6 +287,8 @@ class Display ( wx.Panel ) :
                 end = start + self.n_lines
                 slice = self.search_data[start:end]
             else :
+                if self.cur == self.SHOW_END :
+                    start = self.n_data - self.n_lines
                 # This works fine at the end of data when the
                 # slice has less than n_lines
                 self.cur = start
@@ -440,6 +466,7 @@ class Preview_Frame ( wx.Frame ) :
 
             self.db = db
             self.labelmaker = ll
+            self.main_display = parent
 
             self.data = data
             self.n_data = len(data)
@@ -537,9 +564,12 @@ class Preview_Frame ( wx.Frame ) :
                     self.refresh ( self.index - 1)
                 return
             if action == "Edit" :
-                self.edit = Edit_Frame ( self, self.data, self.index, self.db, self.labelmaker )
+                self.edit = Edit_Frame ( self, self.main_display, self.data, self.index, self.db, self.labelmaker )
                 self.edit.Show ( True )
                 self.Close ();
+                return
+            if action == "Clone" :
+                print ( f"CLONE {self.data[self.index][m_ID]}" )
                 return
 
         def __build_nav ( self, pp ) :
@@ -562,11 +592,17 @@ class Preview_Frame ( wx.Frame ) :
             b.Bind ( wx.EVT_BUTTON, self.__onNav )
             sz.Add ( b, 0, wx.EXPAND )
 
+            sz.AddSpacer ( 80 )
+
+            b = wx.Button ( pan, wx.ID_ANY, "Clone")
+            b.Bind ( wx.EVT_BUTTON, self.__onNav )
+            sz.Add ( b, 0, wx.EXPAND )
+
             return pan
 
 class Edit_Frame ( wx.Frame ) :
 
-        def __init__ ( self, parent, data, index, db, ll ):
+        def __init__ ( self, parent, main, data, index, db, ll ):
             title = "Edit mount"
             psize = ( 800, 600 )
 
@@ -575,6 +611,7 @@ class Edit_Frame ( wx.Frame ) :
 
             self.db = db
             self.labelmaker = ll
+            self.main_display = main
 
             self.tags = db.get_tags ()
 
@@ -712,6 +749,7 @@ class Edit_Frame ( wx.Frame ) :
                 self.__check ( self.e_species, m_SPECIES )
                 self.__check ( self.e_loc, m_LOC )
                 self.__check ( self.e_ass, m_ASS )
+                self.main_display.refresh ()
                 self.Close ()
                 return
 

@@ -122,6 +122,10 @@ class EZtext ( MyStaticText ) :
             #print ( rv )
             #print ( type(rv) )
 
+            #size = wx.DefaultSize
+            #print ( "Text size = ", size )
+            # Shows (-1, -1)
+
             # prefix some space here
             padded = "    " + message
             MyStaticText.__init__ ( self, parent, wx.ID_ANY, padded )
