@@ -599,6 +599,9 @@ class Preview_Frame ( wx.Frame ) :
             if action == "Clone" :
                 self.clone ( self.index )
                 return
+            if action == "Done" :
+                self.Close ()
+                return
 
         def __build_nav ( self, pp ) :
             pan = wx.Panel ( pp, -1 )
@@ -623,6 +626,12 @@ class Preview_Frame ( wx.Frame ) :
             sz.AddSpacer ( 80 )
 
             b = wx.Button ( pan, wx.ID_ANY, "Clone")
+            b.Bind ( wx.EVT_BUTTON, self.__onNav )
+            sz.Add ( b, 0, wx.EXPAND )
+
+            sz.AddStretchSpacer()
+
+            b = wx.Button ( pan, wx.ID_ANY, "Done")
             b.Bind ( wx.EVT_BUTTON, self.__onNav )
             sz.Add ( b, 0, wx.EXPAND )
 
@@ -752,7 +761,7 @@ class Edit_Frame ( wx.Frame ) :
 
             label = EZtext ( pan, s, lab )
 
-            edit = wx.TextCtrl ( pan, size=(100, -1), value="")
+            edit = wx.TextCtrl ( pan, size=(800, -1), value="")
             #edit.SetLabel ( fill )
             s.Add ( edit, 1, wx.EXPAND )
 
