@@ -13,7 +13,11 @@ from Micros import *
 
 m = Micros ()
 
-m.update_one ( 274, "myid", "08-144" )
+# m.update_one ( 274, "myid", "08-144" )
+m.update_one ( 380, "myid", "08-249" )
+m.update_one ( 381, "myid", "08-250" )
+m.update_one ( 382, "myid", "08-251" )
+m.update_one ( 383, "myid", "08-252" )
 
 m.close ()
 

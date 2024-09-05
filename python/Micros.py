@@ -32,7 +32,7 @@ m_ORIGIN = 6
 m_SOURCE = 7
 m_OWNER = 8
 m_STATUS = 9
-m_LABEL = 10
+m_COLLECTION = 10
 m_CREATED = 11
 m_UPDATED = 12
 
@@ -50,7 +50,8 @@ m_UPDATED = 12
 #        hash['source'] = mount[7]
 #        hash['owner'] = mount[8]
 #        hash['status'] = mount[9]
-#        hash['label_info'] = mount[10]
+####        hash['label_info'] = mount[10]
+#        hash['collection'] = mount[10]
 #        hash['created_at'] = mount[11]
 #        hash['updated_at'] = mount[12]
 #        return hash
@@ -212,7 +213,7 @@ class Micros :
     # (7, 'source', 'varchar(255)', 0, None, 0)
     # (8, 'owner', 'varchar(255)', 0, None, 0)
     # (9, 'status', 'varchar(255)', 0, None, 0)
-    # (10, 'label_info', 'varchar(255)', 0, None, 0)
+    # (10, 'collection', 'varchar(255)', 0, None, 0)
     # (11, 'created_at', 'datetime', 0, None, 0)
     # (12, 'updated_at', 'datetime', 0, None, 0)
 

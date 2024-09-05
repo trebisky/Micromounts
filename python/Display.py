@@ -482,7 +482,7 @@ class Preview_Frame ( wx.Frame ) :
 
         def __init__ ( self, parent, data, index, db, ll ):
             title = "Mount"
-            psize = ( 800, 600 )
+            psize = ( 800, 650 )
 
             wx.Frame.__init__(self, None, wx.ID_ANY, title, size=psize )
             #top = wx.Frame.__init__(self, None, wx.ID_ANY, title, pos=(a,b), size=wsize )
@@ -520,6 +520,9 @@ class Preview_Frame ( wx.Frame ) :
             self.l6 = EZtext ( pan, s, bogus )
             self.l7 = EZtext ( pan, s, bogus )
             self.l8 = EZtext ( pan, s, bogus )
+
+            # Collection
+            self.l88 = EZtext ( pan, s, bogus )
 
             self.lc = EZtext ( pan, s, bogus )
             self.lu = EZtext ( pan, s, bogus )
@@ -560,6 +563,9 @@ class Preview_Frame ( wx.Frame ) :
             self.l7.SetLabel ( msg )
             msg = f"Status: {mm[m_STATUS]}"
             self.l8.SetLabel ( msg )
+
+            msg = f"Collection: {mm[m_COLLECTION]}"
+            self.l88.SetLabel ( msg )
 
             msg = f"Created: {mm[m_CREATED]}"
             self.lc.SetLabel ( msg )
@@ -663,7 +669,7 @@ class Edit_Frame ( wx.Frame ) :
 
         def __init__ ( self, parent, main, data, index, db, ll ):
             title = "Edit mount"
-            psize = ( 800, 760 )
+            psize = ( 800, 850 )
 
             wx.Frame.__init__(self, None, wx.ID_ANY, title, size=psize )
             #top = wx.Frame.__init__(self, None, wx.ID_ANY, title, pos=(a,b), size=wsize )
@@ -685,6 +691,9 @@ class Edit_Frame ( wx.Frame ) :
 
             self.status_vals = "ok lost gift trade".split()
             self.status_labels = "OK Lost Given Traded".split()
+
+            self.collection_vals = "main other hubbard lundgren".split()
+            self.collection_labels = "Main OP Hubbard Lundgren".split()
 
             pan = wx.Panel ( self, -1 )
             s = wx.BoxSizer ( wx.VERTICAL )
@@ -724,6 +733,11 @@ class Edit_Frame ( wx.Frame ) :
             #self.l8 = EZtext ( pan, s, bogus )  # status
             self.r_status = wx.RadioBox ( pan, label = 'Status', choices = self.status_labels, style = wx.RA_SPECIFY_COLS )
             s.Add ( self.r_status, 0, wx.EXPAND )
+
+            s.AddSpacer ( 5 )
+
+            self.r_collection = wx.RadioBox ( pan, label = 'Collection', choices = self.collection_labels, style = wx.RA_SPECIFY_COLS )
+            s.Add ( self.r_collection, 0, wx.EXPAND )
 
             s.AddSpacer ( 10 )
 
@@ -801,6 +815,9 @@ class Edit_Frame ( wx.Frame ) :
             ix = self.__find_index ( self.status_vals, mm[m_STATUS] )
             self.r_status.SetSelection ( ix )
 
+            ix = self.__find_index ( self.collection_vals, mm[m_COLLECTION] )
+            self.r_collection.SetSelection ( ix )
+
             self.e_source.SetValue ( mm[m_SOURCE] )
 
             #msg = f"Source: {mm[m_SOURCE]}"
@@ -872,6 +889,7 @@ class Edit_Frame ( wx.Frame ) :
             self.__check ( self.e_notes, m_NOTES )
             self.__check_r ( self.r_origin, self.origin_vals, m_ORIGIN )
             self.__check_r ( self.r_status, self.status_vals, m_STATUS )
+            self.__check_r ( self.r_collection, self.collection_vals, m_COLLECTION )
             self.main_display.refresh ( True )
 
         def __onNav ( self, event ) :

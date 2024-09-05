@@ -9,6 +9,7 @@ minerals.sqlite3_OLD
 minerals.sqlite3_BAK
 minerals.sqlite3.BAK*
 minerals.sqlite3_BAK*
+test.sqlite3
 rails
 rails/*
 box*
