@@ -62,6 +62,10 @@ class MyStaticText ( wx.Control ):
         self.fg_color = colour
         self.Refresh()
 
+    def SetBGColour(self, colour):
+        self.bg_color = colour
+        self.Refresh()
+
     def OnEraseBackground(self, event):
         pass
 

@@ -14,6 +14,8 @@ from Micros import *
 from Text import *
 from Labels import *
 
+# =========================
+
 class Display ( wx.Panel ) :
 
         def __init__ ( self, parent, db, n_lines ):
@@ -318,6 +320,14 @@ class Display ( wx.Panel ) :
                 label = self.mk_desc ( m )
                 self.labels[ii].SetLabel ( label )
                 self.buttons[ii].SetLabel ( m[m_MYID] )
+                fancy = wx.Colour ( "white" )
+                if m[m_STATUS] != "ok" :
+                    fancy = wx.Colour ( "pink" )
+                if m[m_COLLECTION] != "main" :
+                    # fancy = wx.RED
+                    # fancy = wx.Colour("light coral")
+                    fancy = wx.Colour ( "light blue" )
+                self.labels[ii].SetBGColour ( fancy )
                 ii += 1
 
         def Pop_micro ( self, my_id ) :
@@ -561,7 +571,10 @@ class Preview_Frame ( wx.Frame ) :
             self.l6.SetLabel ( msg )
             msg = f"Owner: {mm[m_OWNER]}"
             self.l7.SetLabel ( msg )
+
             msg = f"Status: {mm[m_STATUS]}"
+            if mm[m_STATUS] == "gift" :
+                msg = f"Status: given away"
             self.l8.SetLabel ( msg )
 
             msg = f"Collection: {mm[m_COLLECTION]}"
