@@ -1,7 +1,6 @@
 Form
 db_read
 db_sq3_ver1
-./*.png
 methods
 minerals.sqlite3
 minerals.sql
@@ -17,6 +16,8 @@ zzz
 *.BAK
 *.OLD
 *.swp
+./*.png
+*.png
 m_count
 Misc
 Misc/*

@@ -2,6 +2,9 @@ This is a database to keep track of my micromount mineral collection.
 It allows me to perform various searches, but is also extremely useful
 in allowing me to generate labels that go on the mineral boxes.
 
+It requires the pstoimg package, which has many dependencies
+(most of TeX) on Fedora
+
 Up until July, 2024 this was a ruby based project.
 Then ruby gems got into some nasty tangle that I could never fix.
 I only used two gems (sqlite3 and gtk3), but I gave up and in July

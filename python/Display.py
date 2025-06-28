@@ -317,7 +317,7 @@ class Display ( wx.Panel ) :
 
             ii = 0
             for m in slice :
-                label = self.mk_desc ( m )
+                label = self.__mk_desc ( m )
                 self.labels[ii].SetLabel ( label )
                 self.buttons[ii].SetLabel ( m[m_MYID] )
                 fancy = wx.Colour ( "white" )
@@ -399,7 +399,7 @@ class Display ( wx.Panel ) :
             return rv
 
         # Generate a nice string to describe a mount
-        def mk_desc ( self, m ) :
+        def __mk_desc ( self, m ) :
             sp = self.__tidy ( m[m_SPECIES] )
             ass = self.__tidy ( m[m_ASS] )
             loc = self.__tidy ( m[m_LOC] )
@@ -412,7 +412,9 @@ class Display ( wx.Panel ) :
             #ll = "  " + loc
             # rv += ll.ljust ( nfill ) + "_"
             rv += "  " + loc
-            return rv
+            # This final blank pad is to get color at a uniform width
+            # when background color is used.
+            return rv.ljust ( 100 )
 
 # ========================= SEARCH ===================================
 
@@ -705,8 +707,8 @@ class Edit_Frame ( wx.Frame ) :
             self.status_vals = "ok lost gift trade".split()
             self.status_labels = "OK Lost Given Traded".split()
 
-            self.collection_vals = "main other hubbard lundgren".split()
-            self.collection_labels = "Main OP Hubbard Lundgren".split()
+            self.collection_vals = "main other hubbard lundgren eifel".split()
+            self.collection_labels = "Main OP Hubbard Lundgren Eifel".split()
 
             pan = wx.Panel ( self, -1 )
             s = wx.BoxSizer ( wx.VERTICAL )

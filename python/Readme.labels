@@ -1,0 +1,14 @@
+To make labels:
+
+cd python
+vi Makefile
+make
+# lpr label_sheet.ps
+make print
+
+You will see that the Makefile runs the command line
+"labels" program, which accepts a list of specimens for
+which labels are desired.  It fills the sheet beginning
+at the last label specified up to the end of the database.
+
+label_sheet.ps is the output.
